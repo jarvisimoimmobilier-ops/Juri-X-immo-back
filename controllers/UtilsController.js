@@ -1,7 +1,6 @@
 import multer from "multer";
 import User from "../model/User.js";
 import { StatusCodes } from "http-status-codes";
-import { uploadImageFile } from "../services/imageService.js";
 import { getUserIdFromToken } from "../services/authService.js";
 
 const storage = multer.memoryStorage();

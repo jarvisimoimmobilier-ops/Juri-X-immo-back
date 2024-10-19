@@ -2,59 +2,72 @@ import { UnAuthenticatedError, badRequestError } from "../errors/index.js";
 import User from "../model/User.js";
 import jwt from "jsonwebtoken";
 
-const registerUser = async (name, email, password,customerId) => {
-  if (!name || !email || !password) {
-    throw new badRequestError("Please provide all values");
+// Service function for registering a new user
+const registerUser = async (username, email, password) => {
+  // Validate input fields
+  if (!username || !email || !password) {
+    throw new badRequestError("Please provide all required values");
   }
 
-  const userAlreadyExists = await User.findOne({ email });
+  // Check if the email is already registered
+  const userAlreadyExists = await User.findOne({ "auth_user.email": email });
   if (userAlreadyExists) {
-    throw new badRequestError("Email already in use");
+    throw new badRequestError("Email is already in use");
   }
 
-  const user = await User.create({ name, email, password,customerId });
-  return user;
+  // Create the new user
+  const newUser = new User({
+    auth_user: {
+      username: username,
+      email,
+      password,
+    },
+  });
+
+  // Save user in the database
+  const savedUser = await newUser.save();
+
+  return savedUser;
 };
 
 // Service function for user login
 const loginUser = async (email, password) => {
+  // Validate input
   if (!email || !password) {
-    throw new badRequestError("Please provide all values");
+    throw new badRequestError("Please provide both email and password");
   }
 
-  const user = await User.findOne({ email }).select("+password");
-
+  // Find the user by email, include password for comparison
+  const user = await User.findOne({ "auth_user.email": email }).select(
+    "+auth_user.password"
+  );
   if (!user) {
     throw new UnAuthenticatedError("Invalid Credentials");
   }
 
+  // Check if the password is correct
   const isPasswordCorrect = await user.comparePassword(password);
   if (!isPasswordCorrect) {
     throw new UnAuthenticatedError("Invalid Credentials");
   }
 
+  // Create a JWT for the user
   const token = user.createJWT();
-  user.password = undefined;
 
-  return { user, token, location: user.location };
+  return { user: { _id: user._id, email: user.auth_user.email }, token };
 };
 
-const getUserIdFromToken = async (token) => {
+// Service function to get user ID from JWT token
+const getUserIdFromToken = (token) => {
   try {
-    // Verify the token
+    // Verify and decode the JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Get the user ID from the decoded token
-    const userId = decoded.userId;
-
-    // Find the user by ID in the database
-    const user = await User.findById(userId);
-
-    return user;
+    // Return the user ID from the token payload
+    return decoded.userId;
   } catch (error) {
-    // If there's an error (e.g., token expired or invalid), handle it here
-    console.error(error);
-    throw new Error("Failed to get user from token");
+    console.error("Error decoding token:", error);
+    throw new Error("Failed to verify token");
   }
 };
 

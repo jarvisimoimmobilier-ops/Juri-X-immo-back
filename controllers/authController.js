@@ -2,53 +2,43 @@ import User from "../model/User.js";
 import { StatusCodes } from "http-status-codes";
 import { OAuth2Client } from "google-auth-library";
 import { badRequestError, UnAuthenticatedError } from "../errors/index.js";
-import { registerUser,loginUser, getUserIdFromToken } from "../services/authService.js";
+import {
+  registerUser,
+  loginUser,
+  getUserIdFromToken,
+} from "../services/authService.js";
 import jwt from "jsonwebtoken";
-import stripeInit from 'stripe';
 import dotenv from "dotenv";
 dotenv.config();
 
-const stripe = stripeInit(process.env.STRIPE_SECRET_KEY); 
-
-
+// Register a new user
 const register = async (req, res) => {
-  const { name, email, password  } = req.body;
+  const { username, email, password } = req.body;
 
   try {
+    // Register the user in the application
+    const user = await registerUser(username, email, password);
 
-    let customer;
-    // Check if the customer exists
-    const customers = await stripe.customers.list({ email: email, limit: 1 });
-    if(customers.data.length > 0){
-    customer = customers.data[0]
-    }else{
-      customer = await stripe.customers.create({
-        name: name,
-        email: email,
-        description: 'New Customer'
-      });
-    }
-
-    const user = await registerUser(name, email, password,customer.id);
+    // Create a JWT token for the new user
     const token = user.createJWT();
 
+    // Respond with user details and token
     res.status(StatusCodes.CREATED).json({
       user: {
-        email: user.email,
-        lastName: user.lastName,
-        name: user.name,
-        customerId:customer.id
+        username: user.auth_user.username,
+        email: user.auth_user.email,
       },
-      token
+      token,
     });
-
   } catch (error) {
-    // Handle errors (you may want to create a separate error handling middleware)
     console.error(error);
-    res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    res
+      .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
   }
 };
 
+// Login an existing user
 const login = async (req, res) => {
   const { email, password } = req.body;
 
@@ -56,63 +46,75 @@ const login = async (req, res) => {
     const result = await loginUser(email, password);
     res.status(StatusCodes.OK).json(result);
   } catch (error) {
-    // Handle errors appropriately
     console.error(error);
-    res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json({ error: error.message });
+    res
+      .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
   }
 };
 
-// handles google login
-const clientId = new OAuth2Client("383922153128-qbmd4ngqd1knc05abrc30hac9lgb8n0o.apps.googleusercontent.com");
-
+// Handles Google login authentication
+const clientId = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const googleAuth = async (req, res) => {
   const { idToken } = req.body;
-  if (idToken) {
-    try {
-      const response = await clientId.verifyIdToken({ idToken, audience: "383922153128-qbmd4ngqd1knc05abrc30hac9lgb8n0o.apps.googleusercontent.com" });
-      const { email_verified, email, name, picture } = response.payload;
-      if (email_verified) {
-        // Check if user with the provided email already exists
-        let user = await User.findOne({ email });
 
-        if (!user) {
-          // If user doesn't exist, create a new one
-          let password = email + clientId;
-          user = await User.create({ email, password, fullName: name, name, picture });
-        }
+  if (!idToken) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "Invalid request" });
+  }
 
-        // Generate JWT token
-        const token = jwt.sign({ email: user.email, userId: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_LIFETIME });
+  try {
+    const response = await clientId.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
 
-        res.status(StatusCodes.OK).json({
-          user,
-          token // Send the JWT token to the client
-        });
+    const { email_verified, email, name, picture } = response.payload;
+
+    if (email_verified) {
+      // Check if user already exists
+      let user = await User.findOne({ "auth_user.email": email });
+
+      // If user doesn't exist, create a new one
+      if (!user) {
+        const password = email + process.env.JWT_SECRET; // Dummy password for Google auth users
+        user = await registerUser(name, email, password);
       }
-    } catch (error) {
-      console.error("Error with Google authentication:", error);
-      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: "Error with Google authentication" });
+
+      // Generate a new JWT token
+      const token = jwt.sign(
+        { email: user.auth_user.email, userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_LIFETIME }
+      );
+
+      res.status(StatusCodes.OK).json({ user, token });
+    } else {
+      res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json({ message: "Google authentication failed" });
     }
-  } else {
-    res.status(StatusCodes.BAD_REQUEST).json({ message: "Invalid request" });
+  } catch (error) {
+    console.error("Error with Google authentication:", error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "Error with Google authentication" });
   }
 };
 
-
-
-//Get user data by id
+// Get user data by ID
 const getUserById = async (req, res) => {
-
   try {
-    // Get user ID from the token
+    // Extract user ID from the JWT token
     const user_id = await getUserIdFromToken(req.headers.authorization);
 
-    const user = await User.findOne({ _id: user_id });
+    const user = await User.findById(user_id);
     if (!user) {
       return res
         .status(StatusCodes.NOT_FOUND)
-        .json({ message: "user not found or unauthorized to read" });
+        .json({ message: "User not found" });
     }
 
     res.status(StatusCodes.OK).json({ user });
@@ -124,20 +126,22 @@ const getUserById = async (req, res) => {
   }
 };
 
-//Update user data by id
+// Update user data
 const updateUserData = async (req, res) => {
   const newUserData = req.body;
 
   try {
-    // Check if the brand belongs to the authenticated user before updating
+    // Extract user ID from the JWT token
     const user_id = await getUserIdFromToken(req.headers.authorization);
-    const user = await User.findOne({ _id: user_id });
+
+    const user = await User.findById(user_id);
     if (!user) {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ message: "User not found or unauthorized to update" });
     }
 
+    // Update the user's data
     const updatedUser = await User.findByIdAndUpdate(user_id, newUserData, {
       new: true,
     });
@@ -151,6 +155,4 @@ const updateUserData = async (req, res) => {
   }
 };
 
-
-
-export { register, login , googleAuth, getUserById,updateUserData};
+export { register, login, googleAuth, getUserById, updateUserData };

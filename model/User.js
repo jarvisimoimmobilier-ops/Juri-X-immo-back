@@ -5,18 +5,11 @@ import jwt from "jsonwebtoken";
 
 const { Schema } = mongoose;
 
-const UserSchema = new mongoose.Schema({
-  image_link:String,
-  name: {
+// Auth user sub-schema
+const authUserSchema = new mongoose.Schema({
+  username: {
     type: String,
-    required: [true, "Please provide name"],
-    minlength: 3,
-    maxlength: 20,
-    trim: true,
-  },
-  firstName: {
-    type: String,
-    required: [false, "Please provide name"],
+    required: [true, "Please provide a username"],
     minlength: 3,
     maxlength: 20,
     trim: true,
@@ -26,71 +19,62 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Please provide email"],
     validate: {
       validator: validator.isEmail,
-      message: "Please provide a validate email",
+      message: "Please provide a valid email",
     },
     unique: true,
   },
-  contactNumber: {
+  phone_number: {
     type: String,
-    required:false,
+    required: false,
     validate: {
-      validator: function(value) {
-        // Assuming a simple regex for demonstration. You might want to use a more robust one depending on your needs.
-        return /^\d{10}$/.test(value); // This regex is for a 10-digit number, modify as per requirement
+      validator: function (value) {
+        return /^\d{10}$/.test(value); // Modify regex based on requirements
       },
       message: "Please provide a valid contact number",
     },
-    unique: true,
-},
+  },
   password: {
     select: false,
     type: String,
     required: [true, "Please provide password"],
     minlength: 6,
   },
-  address: {
-    type: String,
-    required:false,
-    minlength: 3,
-  },
-  brands: [{ type: Schema.Types.ObjectId, ref: "Brand" }],
-  customerId: {
-    type: String,
-    required: false,
-    default:null
-  },
-  currentPlan: {
-    type: String,
-    required: [true, "Please specify a subscription plan"],
-    enum: ['Free', 'Premium', 'Advanced'],
-    default: 'Free'
-  },
-  // Eligible items the user can still create
-  eligibleBrands: {
-    type: Number,
-    required: true,
-    default: 1 // Default value for Free plan; adjust based on plan
-  },
-  eligibleCalendars: {
-    type: Number,
-    required: true,
-    default: 1 // Default value for Free plan
+});
+
+// App user sub-schema (to handle threads)
+const appUserSchema = new mongoose.Schema({
+  threads: [{ type: mongoose.Schema.Types.ObjectId, ref: "Thread" }], // Reference to Thread model
+});
+
+// Main User schema
+const UserSchema = new mongoose.Schema({
+  auth_user: authUserSchema, // Embed auth_user schema
+  app_user: appUserSchema, // Embed app_user schema
+  image_link: String, // For profile pic, as per your design
+});
+
+// Middleware to hash the password before saving
+UserSchema.pre("save", async function () {
+  if (this.isModified("auth_user.password")) {
+    // Only hash if password is modified
+    const salt = await bcrypt.genSalt(10);
+    this.auth_user.password = await bcrypt.hash(this.auth_user.password, salt); // Hashing auth_user.password
   }
 });
 
-UserSchema.pre("save", async function () {
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
+// JWT creation method
 UserSchema.methods.createJWT = function () {
   return jwt.sign({ userId: this._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_LIFETIME,
   });
 };
 
+// Compare password method
 UserSchema.methods.comparePassword = async function (candidatePassword) {
-  const isMatch = await bcrypt.compare(candidatePassword, this.password);
+  const isMatch = await bcrypt.compare(
+    candidatePassword,
+    this.auth_user.password
+  ); // Referencing auth_user.password
   return isMatch;
 };
 
