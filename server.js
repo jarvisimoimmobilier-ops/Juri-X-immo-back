@@ -3,16 +3,15 @@ import stripeInit from "stripe";
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
-dotenv.config();
 import "express-async-errors";
 import connectDB from "./db/connect.js";
 import authRouter from "./routes/authRoutes.js";
+import conversationRouter from "./routes/conversationRouter.js";
 import GptRoutes from "./routes/gptRoutes.js";
 import Utils from "./routes/Utils.js";
 import PaymentRoutes from "./routes/paymentRoutes.js";
 import errorHandlerMiddleware from "./middleware/error-handler.js";
 import notFoundModule from "./middleware/not-found.js";
-import User from "./model/User.js";
 
 dotenv.config();
 
@@ -27,9 +26,10 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/v1/auth", authRouter);
-app.use("/api/v1/", GptRoutes);
+app.use("/api/v1/conversation", conversationRouter);
 app.use("/api/v1/", Utils);
-app.use("/api/v1/", PaymentRoutes);
+// app.use("/api/v1/", GptRoutes);
+// app.use("/api/v1/", PaymentRoutes);
 
 app.use(notFoundModule);
 app.use(errorHandlerMiddleware);

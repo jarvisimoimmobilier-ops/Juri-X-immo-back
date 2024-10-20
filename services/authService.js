@@ -57,17 +57,22 @@ const loginUser = async (email, password) => {
   return { user: { _id: user._id, email: user.auth_user.email }, token };
 };
 
-// Service function to get user ID from JWT token
-const getUserIdFromToken = (token) => {
+// Service function to get user from JWT token
+const getUserIdFromToken = async (token) => {
   try {
     // Verify and decode the JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.userId);
 
-    // Return the user ID from the token payload
-    return decoded.userId;
+    // Check if user exists
+    if (!user) {
+      throw new UnAuthenticatedError("User not found");
+    }
+
+    return user;
   } catch (error) {
     console.error("Error decoding token:", error);
-    throw new Error("Failed to verify token");
+    throw new UnAuthenticatedError("Invalid Token");
   }
 };
 
