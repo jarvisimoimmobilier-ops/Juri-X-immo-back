@@ -22,6 +22,9 @@ const registerUser = async (username, email, password) => {
       email,
       password,
     },
+    app_user: {
+      threads: [],
+    },
   });
 
   // Save user in the database

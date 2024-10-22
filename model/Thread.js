@@ -14,14 +14,16 @@ const messageSchema = new mongoose.Schema({
 
 // Define the Thread schema
 const threadSchema = new mongoose.Schema({
-  creation_date: { type: Date, default: Date.now }, // Thread creation date
-  assistant_id: { type: String, required: true }, // ID of the assistant
+  name: { type: String, required: true },
+  thread_id: { type: String, required: true, unique: true },
+  creation_date: { type: Date, default: Date.now },
+  assistant_id: { type: String, required: true },
+  status: { type: String, enum: ["active", "deleted"], default: "active" },
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
-  }, // Reference to the user
-  number_of_messages: { type: Number, default: 0 }, // Total number of messages in the thread
+  },
   messages: [messageSchema], // Array of messages using the message sub-schema
 });
 

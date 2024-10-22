@@ -1,5 +1,4 @@
 import express from "express";
-import stripeInit from "stripe";
 import morgan from "morgan";
 import cors from "cors";
 import dotenv from "dotenv";
@@ -7,16 +6,13 @@ import "express-async-errors";
 import connectDB from "./db/connect.js";
 import authRouter from "./routes/authRoutes.js";
 import conversationRouter from "./routes/conversationRouter.js";
-import GptRoutes from "./routes/gptRoutes.js";
 import Utils from "./routes/Utils.js";
-import PaymentRoutes from "./routes/paymentRoutes.js";
 import errorHandlerMiddleware from "./middleware/error-handler.js";
 import notFoundModule from "./middleware/not-found.js";
 
 dotenv.config();
 
 const app = express();
-const stripe = stripeInit(process.env.STRIPE_SECRET_KEY);
 
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
