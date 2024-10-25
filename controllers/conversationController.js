@@ -1,6 +1,5 @@
 import { StatusCodes } from "http-status-codes";
 import dotenv from "dotenv";
-import Thread from "../model/Thread.js";
 import { validatePayload } from "../utils/functions.js";
 import {
   createThread,
@@ -9,6 +8,9 @@ import {
 import {
   createAndSaveThread,
   updateThreadMessages,
+  getThreadById,
+  getAllThreadsByUserId,
+  deleteThreadAndUserReference,
 } from "../repositories/ThreadRepository.js";
 dotenv.config();
 
@@ -45,12 +47,9 @@ const sendMessage = async (req, res) => {
   const { message, thread_id } = req.body;
 
   // Find the thread in the database
-  const thread = await Thread.findOne({ _id: thread_id, user: user._id });
-  if (!thread) {
-    return res
-      .status(StatusCodes.NOT_FOUND)
-      .json({ message: "Thread not found or access denied." });
-  }
+  const thread = await getThreadById(thread_id, user._id);
+
+  console.log(thread);
 
   const assistantResponse = await sendMessageToOpenAI(
     message,
@@ -72,43 +71,33 @@ const sendMessage = async (req, res) => {
 const getConvHistory = async (req, res) => {
   const user = req.user;
   const { id } = req.params;
-  const response = {
-    user: user,
-    message: "Thanks for calling this API",
-  };
-  res.status(StatusCodes.OK).json(response);
+  console.log(id);
+  const thread = await getThreadById(id, user._id);
+  res.status(StatusCodes.OK).json({
+    name: thread.name,
+    thread_id: thread.thread_id,
+    creation_date: thread.creation_date,
+    assistant_id: thread.assistant_id,
+    messages: thread.messages,
+  });
 };
 
 // get conversations
 const getAllConversations = async (req, res) => {
   const userId = req.user._id; // Get the authenticated user's ID
-
-  // Find all threads associated with the user
-  const threads = await Thread.find({ user_id: userId })
-    .select("creation_date assistant_id status user_id")
-    .lean();
-
-  // Format the response
-  const response = threads.map((thread) => ({
-    thread_id: thread._id, // MongoDB auto-generated ID
-    creation_date: thread.creation_date,
-    assistant_id: thread.assistant_id,
-    status: thread.status,
-    user_id: thread.user_id,
-  }));
-
-  res.status(StatusCodes.OK).json(response);
+  const threads = await getAllThreadsByUserId(userId);
+  res.status(StatusCodes.OK).json(threads);
 };
 
 // delete a conversation
 const deleteConversation = async (req, res) => {
   const user = req.user;
   const { id } = req.params;
-  const response = {
-    user: user,
-    message: "Thanks for calling this API",
-  };
-  res.status(StatusCodes.OK).json(response);
+  await deleteThreadAndUserReference(id, user._id);
+
+  res.status(StatusCodes.OK).json({
+    message: "Conversation deleted successfully.",
+  });
 };
 
 export {

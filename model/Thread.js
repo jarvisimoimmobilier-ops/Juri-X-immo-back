@@ -23,7 +23,7 @@ const threadSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
-  messages: [messageSchema], // Array of messages using the message sub-schema
+  messages: [messageSchema],
 });
 
 const Thread = mongoose.model("Thread", threadSchema);

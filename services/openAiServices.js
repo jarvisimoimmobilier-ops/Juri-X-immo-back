@@ -18,7 +18,7 @@ async function createThread(assistant_app_id) {
     );
   }
   const thread = await openai.beta.threads.create();
-  return thread.id; // Return the ID of the created thread
+  return thread.id;
 }
 
 async function sendMessageToOpenAI(message, assistant_app_id, thread_id) {
