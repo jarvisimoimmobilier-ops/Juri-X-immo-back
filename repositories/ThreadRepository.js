@@ -23,3 +23,21 @@ export const createAndSaveThread = async (
 
   return newThread;
 };
+
+export const updateThreadMessages = async (
+  thread_id,
+  { userMessage, assistantMessage }
+) => {
+  return await Thread.findByIdAndUpdate(
+    thread_id,
+    {
+      $push: {
+        messages: [
+          { sender: "user", content: userMessage }, // Add user's message
+          { sender: "assistant", content: assistantMessage }, // Add assistant's message
+        ],
+      },
+    },
+    { new: true }
+  );
+};

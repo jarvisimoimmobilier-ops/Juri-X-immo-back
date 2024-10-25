@@ -1,16 +1,14 @@
 {
-  "assistants": [
-    {
+  "assistants": {
+    "1": {
       "name": "Real Estate Assistant Fr ",
-      "id": "1",
       "avatar's name": "Avatar 1",
       "openAI_id": "asst_okttwqn7UPhUR6Ml2Ufxwgg8"
     },
-    {
-      "name": "Real Estate Assistant Fr ",
-      "id": "2",
+    "2": {
+      "name": "Advanced Real Estate Assistant Fr",
       "avatar's name": "Avatar 2",
       "openAI_id": "asst_okttwqn7UPhUR6Ml2Ufxwgg8"
     }
-  ]
+  }
 }

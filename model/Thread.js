@@ -9,7 +9,6 @@ const messageSchema = new mongoose.Schema({
     required: true,
   },
   content: { type: String, required: true }, // Message content
-  date: { type: Date, default: Date.now }, // Timestamp for the message
 });
 
 // Define the Thread schema
@@ -25,12 +24,6 @@ const threadSchema = new mongoose.Schema({
     required: true,
   },
   messages: [messageSchema], // Array of messages using the message sub-schema
-});
-
-// Pre-save middleware to automatically update the number_of_messages before saving
-threadSchema.pre("save", function (next) {
-  this.number_of_messages = this.messages.length; // Update the message count
-  next();
 });
 
 const Thread = mongoose.model("Thread", threadSchema);

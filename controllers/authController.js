@@ -56,54 +56,6 @@ const login = async (req, res) => {
 // Handles Google login authentication
 const clientId = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const googleAuth = async (req, res) => {
-  const { idToken } = req.body;
-
-  if (!idToken) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "Invalid request" });
-  }
-
-  try {
-    const response = await clientId.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-
-    const { email_verified, email, name, picture } = response.payload;
-
-    if (email_verified) {
-      // Check if user already exists
-      let user = await User.findOne({ "auth_user.email": email });
-
-      // If user doesn't exist, create a new one
-      if (!user) {
-        const password = email + process.env.JWT_SECRET; // Dummy password for Google auth users
-        user = await registerUser(name, email, password);
-      }
-
-      // Generate a new JWT token
-      const token = jwt.sign(
-        { email: user.auth_user.email, userId: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_LIFETIME }
-      );
-
-      res.status(StatusCodes.OK).json({ user, token });
-    } else {
-      res
-        .status(StatusCodes.UNAUTHORIZED)
-        .json({ message: "Google authentication failed" });
-    }
-  } catch (error) {
-    console.error("Error with Google authentication:", error);
-    res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ message: "Error with Google authentication" });
-  }
-};
-
 // Get user data by ID
 const getUserById = async (req, res) => {
   try {
@@ -155,4 +107,4 @@ const updateUserData = async (req, res) => {
   }
 };
 
-export { register, login, googleAuth, getUserById, updateUserData };
+export { register, login, getUserById, updateUserData };
