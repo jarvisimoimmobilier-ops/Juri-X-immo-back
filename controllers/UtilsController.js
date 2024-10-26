@@ -1,5 +1,8 @@
 import multer from "multer";
-import { updateUserProfilePicture } from "../repositories/UserRepository.js";
+import {
+  updateUserProfilePicture,
+  updateUser,
+} from "../repositories/UserRepository.js";
 import { StatusCodes } from "http-status-codes";
 import { uploadImageFile } from "../services/cloudinaryService.js";
 
@@ -41,4 +44,22 @@ const getUser = async (req, res) => {
   res.status(StatusCodes.OK).json(response);
 };
 
-export { uploadProfilePicture, getUser };
+const updateUserProfile = async (req, res) => {
+  const user = req.user;
+  const updates = req.body; // Expected fields in the body: name, surname, title, image_link
+
+  // Call the updateUser function from UserRepository
+  const updatedUser = await updateUser(user._id, updates);
+
+  res.status(StatusCodes.OK).json({
+    message: "User profile updated successfully",
+    app_user: {
+      name: updatedUser.app_user.name,
+      surname: updatedUser.app_user.surname,
+      title: updatedUser.app_user.title,
+      image_link: updatedUser.app_user.image_link,
+    },
+  });
+};
+
+export { uploadProfilePicture, getUser, updateUserProfile };

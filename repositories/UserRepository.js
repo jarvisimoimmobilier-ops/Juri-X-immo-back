@@ -14,3 +14,26 @@ export const updateUserProfilePicture = async (userId, imageUrl) => {
     throw new Error("Failed to update profile picture.");
   }
 };
+
+export const updateUser = async (userId, updates) => {
+  const { name, surname, title, image_link } = updates;
+
+  // Prepare the update object dynamically
+  const updateData = {};
+  if (name) updateData["app_user.name"] = name;
+  if (surname) updateData["app_user.surname"] = surname;
+  if (title) updateData["app_user.title"] = title;
+  if (image_link) updateData["app_user.image_link"] = image_link;
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $set: updateData },
+    { new: true, runValidators: true }
+  );
+
+  if (!updatedUser) {
+    throw new notFoundError(`User with ID ${userId} not found`);
+  }
+
+  return updatedUser;
+};

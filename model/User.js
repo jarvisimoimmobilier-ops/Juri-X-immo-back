@@ -44,6 +44,21 @@ const authUserSchema = new mongoose.Schema({
 
 // App user sub-schema (to handle threads)
 const appUserSchema = new mongoose.Schema({
+  name: {
+    type: String,
+    required: true,
+    minlength: 5,
+    maxlength: 50,
+  },
+  surname: {
+    type: String,
+    minlength: 5,
+    maxlength: 50,
+  },
+  title: {
+    type: String,
+    maxlength: 100,
+  },
   image_link: {
     type: String,
     validate: {
