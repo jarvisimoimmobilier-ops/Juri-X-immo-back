@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { getDefaultImage } from "../utils/functions.js";
 
 const { Schema } = mongoose;
 
@@ -43,6 +44,19 @@ const authUserSchema = new mongoose.Schema({
 
 // App user sub-schema (to handle threads)
 const appUserSchema = new mongoose.Schema({
+  image_link: {
+    type: String,
+    validate: {
+      validator: function (value) {
+        // Regular expression to check if the value is a valid URL
+        const urlRegex =
+          /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp|bmp|svg|ico))$/i;
+        return urlRegex.test(value);
+      },
+      message: "Please provide a valid image URL",
+    },
+    default: getDefaultImage(),
+  },
   threads: [{ type: mongoose.Schema.Types.ObjectId, ref: "Thread" }], // Reference to Thread model
 });
 
@@ -50,7 +64,6 @@ const appUserSchema = new mongoose.Schema({
 const UserSchema = new mongoose.Schema({
   auth_user: authUserSchema, // Embed auth_user schema
   app_user: appUserSchema, // Embed app_user schema
-  image_link: String, // For profile pic, as per your design
 });
 
 // Middleware to hash the password before saving

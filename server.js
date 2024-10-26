@@ -6,7 +6,7 @@ import "express-async-errors";
 import connectDB from "./db/connect.js";
 import authRouter from "./routes/authRoutes.js";
 import conversationRouter from "./routes/conversationRouter.js";
-import Utils from "./routes/Utils.js";
+import Utils from "./routes/utilitiesRoutes.js";
 import errorHandlerMiddleware from "./middleware/error-handler.js";
 import notFoundModule from "./middleware/not-found.js";
 
@@ -24,8 +24,6 @@ app.use(express.json());
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/conversation", conversationRouter);
 app.use("/api/v1/", Utils);
-// app.use("/api/v1/", GptRoutes);
-// app.use("/api/v1/", PaymentRoutes);
 
 app.use(notFoundModule);
 app.use(errorHandlerMiddleware);

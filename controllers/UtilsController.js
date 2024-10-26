@@ -1,45 +1,44 @@
 import multer from "multer";
-import User from "../model/User.js";
+import { updateUserProfilePicture } from "../repositories/UserRepository.js";
 import { StatusCodes } from "http-status-codes";
-import { getUserIdFromToken } from "../services/authService.js";
+import { uploadImageFile } from "../services/cloudinaryService.js";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-const uploadImage = async (req, res) => {
-  const user_id = await getUserIdFromToken(req.headers.authorization);
-  const user = await User.findById(user_id);
-  if (!user) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ error: "User not found." });
-  }
-  try {
-    upload.single("Logo")(req, res, async (err) => {
-      if (err) {
-        return res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "Error uploading image." });
-      }
+const uploadProfilePicture = async (req, res) => {
+  const user = req.user;
+  upload.single("profilepicture")(req, res, async (err) => {
+    if (err) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "Error uploading image." });
+    }
 
-      if (!req.file) {
-        return res
-          .status(StatusCodes.BAD_REQUEST)
-          .json({ error: "No image provided." });
-      }
+    if (!req.file) {
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json({ error: "No image provided." });
+    }
 
-      const imageUrl = await uploadImageFile(req.file);
+    const imageUrl = await uploadImageFile(req.file);
 
-      delete req.file;
+    delete req.file;
 
-      res.status(StatusCodes.OK).json({ image_link: imageUrl });
-    });
-  } catch (error) {
-    console.error(error);
+    const updatedUser = await updateUserProfilePicture(user._id, imageUrl);
     res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ error: "Internal Server Error." });
-  }
+      .status(StatusCodes.OK)
+      .json({ image_link: updatedUser.app_user.image_link });
+  });
 };
 
-export { uploadImage };
+const getUser = async (req, res) => {
+  const user = req.user;
+  const response = {
+    user: user,
+    message: "Thanks for calling this API",
+  };
+  res.status(StatusCodes.OK).json(response);
+};
+
+export { uploadProfilePicture, getUser };
