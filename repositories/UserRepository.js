@@ -1,4 +1,5 @@
 import User from "../model/User.js";
+import { UnAuthenticatedError } from "../errors/index.js";
 
 export const updateUserProfilePicture = async (userId, imageUrl) => {
   try {
@@ -20,8 +21,8 @@ export const updateUser = async (userId, updates) => {
 
   // Prepare the update object dynamically
   const updateData = {};
-  if (firstname) updateData["app_user.name"] = name;
-  if (lastname) updateData["app_user.surname"] = surname;
+  if (firstname) updateData["app_user.firstname"] = firstname;
+  if (lastname) updateData["app_user.lastname"] = lastname;
   if (title) updateData["app_user.title"] = title;
   if (image_link) updateData["app_user.image_link"] = image_link;
 
@@ -36,4 +37,22 @@ export const updateUser = async (userId, updates) => {
   }
 
   return updatedUser;
+};
+
+export const updateUserPassword = async (
+  user_id,
+  currentPassword,
+  newPassword
+) => {
+  try {
+    const user = await User.findById(user_id).select("+auth_user.password");
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      throw new UnAuthenticatedError("Current password is incorrect.");
+    }
+    user.auth_user.password = newPassword;
+    await user.save();
+  } catch (error) {
+    throw new Error(error.message || "Failed to update password.");
+  }
 };

@@ -4,14 +4,16 @@ import {
   uploadProfilePicture,
   getUser,
   updateUserProfile,
+  updatePassword,
 } from "../controllers/UtilsController.js";
 
 const router = express.Router();
 
 router
-  .route("/uploadProfilePicture")
+  .route("/user/uploadProfilePicture")
   .post(authenticateUser, uploadProfilePicture);
 router.route("/user").get(authenticateUser, getUser);
 router.route("/user").patch(authenticateUser, updateUserProfile);
+router.route("/user/password").patch(authenticateUser, updatePassword);
 
 export default router;

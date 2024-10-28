@@ -46,7 +46,6 @@ const authUserSchema = new mongoose.Schema({
 const appUserSchema = new mongoose.Schema({
   firstname: {
     type: String,
-    required: true,
     minlength: 5,
     maxlength: 50,
   },
@@ -71,6 +70,11 @@ const appUserSchema = new mongoose.Schema({
       message: "Please provide a valid image URL",
     },
     default: getDefaultImage(),
+  },
+  balance: {
+    type: Number,
+    default: 0,
+    min: [0, "Balance cannot be negative"],
   },
   threads: [{ type: mongoose.Schema.Types.ObjectId, ref: "Thread" }], // Reference to Thread model
 });

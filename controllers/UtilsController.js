@@ -2,9 +2,11 @@ import multer from "multer";
 import {
   updateUserProfilePicture,
   updateUser,
+  updateUserPassword,
 } from "../repositories/UserRepository.js";
 import { StatusCodes } from "http-status-codes";
 import { uploadImageFile } from "../services/cloudinaryService.js";
+import { validatePayload } from "../utils/functions.js";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -62,4 +64,18 @@ const updateUserProfile = async (req, res) => {
   });
 };
 
-export { uploadProfilePicture, getUser, updateUserProfile };
+const updatePassword = async (req, res) => {
+  const user = req.user;
+  const { currentPassword, newPassword } = req.body;
+
+  const errorResponse = validatePayload(req, res, [
+    "currentPassword",
+    "newPassword",
+  ]);
+  if (errorResponse) return errorResponse;
+
+  await updateUserPassword(user._id, currentPassword, newPassword);
+  res.status(200).json({ message: "Password updated successfully." });
+};
+
+export { uploadProfilePicture, getUser, updateUserProfile, updatePassword };
