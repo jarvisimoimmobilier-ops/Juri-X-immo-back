@@ -11,6 +11,7 @@ import {
   getThreadById,
   getAllThreadsByUserId,
   deleteThreadAndUserReference,
+  updateThreadName,
 } from "../repositories/ThreadRepository.js";
 dotenv.config();
 
@@ -34,6 +35,22 @@ const startConversation = async (req, res) => {
     thread_id: newThread._id,
     name: newThread.name,
     assistant_id: newThread.assistant_id,
+  });
+};
+
+const updateConversationName = async (req, res) => {
+  const { name } = req.body;
+  const { id } = req.params;
+  const user = req.user;
+
+  const errorResponse = validatePayload(req, res, ["name"]);
+  if (errorResponse) return errorResponse;
+
+  const updatedThread = await updateThreadName(id, name);
+
+  res.status(StatusCodes.OK).json({
+    message: "Conversation updated successfully!",
+    name: updatedThread.name,
   });
 };
 
@@ -106,4 +123,5 @@ export {
   getConvHistory,
   deleteConversation,
   getAllConversations,
+  updateConversationName,
 };

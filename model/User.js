@@ -44,13 +44,13 @@ const authUserSchema = new mongoose.Schema({
 
 // App user sub-schema (to handle threads)
 const appUserSchema = new mongoose.Schema({
-  name: {
+  firstname: {
     type: String,
     required: true,
     minlength: 5,
     maxlength: 50,
   },
-  surname: {
+  lastname: {
     type: String,
     minlength: 5,
     maxlength: 50,

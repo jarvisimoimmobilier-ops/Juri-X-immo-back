@@ -6,6 +6,7 @@ import {
   getConvHistory,
   deleteConversation,
   getAllConversations,
+  updateConversationName,
 } from "../controllers/conversationController.js";
 
 const router = express.Router();
@@ -15,5 +16,6 @@ router.route("/send").post(authenticateUser, sendMessage);
 router.route("/:id").get(authenticateUser, getConvHistory);
 router.route("/").get(authenticateUser, getAllConversations);
 router.route("/:id").delete(authenticateUser, deleteConversation);
+router.route("/:id").patch(authenticateUser, updateConversationName);
 
 export default router;

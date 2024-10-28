@@ -105,3 +105,14 @@ export const deleteThreadAndUserReference = async (thread_id, user_id) => {
     throw error; // Rethrow error to handle it in the controller
   }
 };
+
+export const updateThreadName = async (thread_id, newName) => {
+  if (!Types.ObjectId.isValid(thread_id)) {
+    throw new notFoundError(`No thread found with thread_id: ${thread_id}`);
+  }
+  return await Thread.findByIdAndUpdate(
+    thread_id,
+    { name: newName },
+    { new: true }
+  );
+};

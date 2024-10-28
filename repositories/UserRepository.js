@@ -16,12 +16,12 @@ export const updateUserProfilePicture = async (userId, imageUrl) => {
 };
 
 export const updateUser = async (userId, updates) => {
-  const { name, surname, title, image_link } = updates;
+  const { firstname, lastname, title, image_link } = updates;
 
   // Prepare the update object dynamically
   const updateData = {};
-  if (name) updateData["app_user.name"] = name;
-  if (surname) updateData["app_user.surname"] = surname;
+  if (firstname) updateData["app_user.name"] = name;
+  if (lastname) updateData["app_user.surname"] = surname;
   if (title) updateData["app_user.title"] = title;
   if (image_link) updateData["app_user.image_link"] = image_link;
 

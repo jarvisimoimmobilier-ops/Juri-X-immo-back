@@ -54,8 +54,8 @@ const updateUserProfile = async (req, res) => {
   res.status(StatusCodes.OK).json({
     message: "User profile updated successfully",
     app_user: {
-      name: updatedUser.app_user.name,
-      surname: updatedUser.app_user.surname,
+      firstname: updatedUser.app_user.firstname,
+      lastname: updatedUser.app_user.lastname,
       title: updatedUser.app_user.title,
       image_link: updatedUser.app_user.image_link,
     },
