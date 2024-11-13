@@ -1,54 +1,54 @@
-import stripeInit from 'stripe';
-import dotenv from 'dotenv';
+import stripeInit from "stripe";
+import dotenv from "dotenv";
 
 dotenv.config();
 const stripe = stripeInit(process.env.STRIPE_SECRET_KEY);
 
 export async function createOrRetrieveStripeCustomer(name, email) {
-    // Attempt to find an existing customer by email
-    const existingCustomers = await stripe.customers.list({
-        email: email,
-        limit: 1
-    });
+  // Attempt to find an existing customer by email
+  const existingCustomers = await stripe.customers.list({
+    email: email,
+    limit: 1,
+  });
 
-    // If a customer exists, return the first one found
-    if (existingCustomers.data.length > 0) {
-        console.log('Customer already exists. Retrieving existing customer.');
-        return existingCustomers.data[0];
-    }
+  // If a customer exists, return the first one found
+  if (existingCustomers.data.length > 0) {
+    console.log("Customer already exists. Retrieving existing customer.");
+    return existingCustomers.data[0];
+  }
 
-    // No existing customer, create a new one
-    console.log('Creating a new customer.');
-    return await stripe.customers.create({
-        name: name,
-        email: email,
-        description: 'New Customer'
-    });
+  // No existing customer, create a new one
+  console.log("Creating a new customer.");
+  return await stripe.customers.create({
+    name: name,
+    email: email,
+    description: "New Customer",
+  });
 }
 
 export async function createCheckoutSession(lineItems, customer, req) {
-    const protocol = req.protocol + '://';
-    const host = req.headers.host;
-    return await stripe.checkout.sessions.create({
-        line_items: lineItems,
-        mode: 'payment',
-        success_url: `${protocol}${host}/payment`,
-        cancel_url: `${protocol}${host}/payment`,
-        payment_method_types: ['card'],
-        customer: customer.id,
-        metadata: {
-            plan: req.body.plan  // Include plan in metadata
-        }
-    });
+  const protocol = req.protocol + "://";
+  const host = req.headers.host;
+  return await stripe.checkout.sessions.create({
+    line_items: lineItems,
+    mode: "payment",
+    success_url: `${protocol}${host}/payment`,
+    cancel_url: `${protocol}${host}/payment`,
+    payment_method_types: ["card"],
+    customer: customer.id,
+    metadata: {
+      plan: req.body.plan, // Include plan in metadata
+    },
+  });
 }
 
 export function getPriceId(plan) {
-    switch (plan) {
-        case "Advanced":
-            return process.env.STRIPE_ADVANCED_PRODUCT_PRICE_ID;
-        case "Premium":
-            return process.env.STRIPE_PREMIUM_PRODUCT_PRICE_ID;
-        default:
-            return process.env.STRIPE_PREMIUM_PRODUCT_PRICE_ID;
-    }
+  switch (plan) {
+    case "Advanced":
+      return process.env.STRIPE_ADVANCED_PRODUCT_PRICE_ID;
+    case "Premium":
+      return process.env.STRIPE_PREMIUM_PRODUCT_PRICE_ID;
+    default:
+      return process.env.STRIPE_PREMIUM_PRODUCT_PRICE_ID;
+  }
 }
