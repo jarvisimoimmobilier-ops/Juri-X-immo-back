@@ -6,7 +6,7 @@ import {
 } from "../repositories/UserRepository.js";
 import { StatusCodes } from "http-status-codes";
 import { uploadImageFile } from "../services/cloudinaryService.js";
-import { validatePayload } from "../utils/functions.js";
+import { validatePayload, getDefaultImage } from "../utils/functions.js";
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -35,6 +35,16 @@ const uploadProfilePicture = async (req, res) => {
       .status(StatusCodes.OK)
       .json({ image_link: updatedUser.app_user.image_link });
   });
+};
+
+const deleteProfilePicture = async (req, res) => {
+  const user = req.user;
+
+  const updatedUser = await updateUserProfilePicture(
+    user._id,
+    getDefaultImage()
+  );
+  res.status(StatusCodes.OK).json({ message: "image deleted successfully" });
 };
 
 const getUser = async (req, res) => {
@@ -79,4 +89,10 @@ const updatePassword = async (req, res) => {
   res.status(200).json({ message: "Password updated successfully." });
 };
 
-export { uploadProfilePicture, getUser, updateUserProfile, updatePassword };
+export {
+  uploadProfilePicture,
+  getUser,
+  updateUserProfile,
+  updatePassword,
+  deleteProfilePicture,
+};
