@@ -1,6 +1,7 @@
 import { UnAuthenticatedError, badRequestError } from "../errors/index.js";
 import User from "../model/User.js";
 import jwt from "jsonwebtoken";
+import { getAssistantConfig } from "../utils/functions.js";
 
 // Service function for registering a new user
 const registerUser = async (username, email, password) => {
@@ -15,22 +16,30 @@ const registerUser = async (username, email, password) => {
     throw new badRequestError("Email is already in use");
   }
 
-  // Create the new user
+  // Fetch assistant configuration to initialize balances
+  const assistants = getAssistantConfig();
+  const defaultBalances = Object.keys(assistants).map((assistantID) => ({
+    assistant_id: assistantID,
+    balance: 0,
+  }));
+
+  // Create the new user with default balances
   const newUser = new User({
     auth_user: {
-      username: username,
+      username,
       email,
       password,
     },
     app_user: {
       threads: [],
+      balances: defaultBalances, // Set initial balances for each assistant
     },
   });
 
-  // Save user in the database
-  const savedUser = await newUser.save();
+  // Save the new user
+  await newUser.save();
 
-  return savedUser;
+  return newUser;
 };
 
 // Service function for user login

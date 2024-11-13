@@ -66,8 +66,6 @@ const sendMessage = async (req, res) => {
   // Find the thread in the database
   const thread = await getThreadById(thread_id, user._id);
 
-  console.log(thread);
-
   const assistantResponse = await sendMessageToOpenAI(
     message,
     thread.assistant_id,
@@ -88,7 +86,6 @@ const sendMessage = async (req, res) => {
 const getConvHistory = async (req, res) => {
   const user = req.user;
   const { id } = req.params;
-  console.log(id);
   const thread = await getThreadById(id, user._id);
   res.status(StatusCodes.OK).json({
     name: thread.name,

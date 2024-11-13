@@ -22,7 +22,6 @@ async function createThread(assistant_app_id) {
 }
 
 async function sendMessageToOpenAI(message, assistant_app_id, thread_id) {
-  console.log(process.env["OPENAI_API_KEY"]);
   const messageToSend = await openai.beta.threads.messages.create(thread_id, {
     role: "user",
     content: message,
@@ -33,6 +32,8 @@ async function sendMessageToOpenAI(message, assistant_app_id, thread_id) {
   });
   if (run.status === "completed") {
     const messages = await openai.beta.threads.messages.list(run.thread_id);
+    // log the tockens
+    console.log(`terminal`, run.usage);
 
     const allMessages = messages.data[0].content;
 

@@ -60,6 +60,7 @@ const updateUserProfile = async (req, res) => {
       lastname: updatedUser.app_user.lastname,
       title: updatedUser.app_user.title,
       image_link: updatedUser.app_user.image_link,
+      country: updatedUser.app_user.country,
     },
   });
 };

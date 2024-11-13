@@ -17,7 +17,7 @@ export const updateUserProfilePicture = async (userId, imageUrl) => {
 };
 
 export const updateUser = async (userId, updates) => {
-  const { firstname, lastname, title, image_link } = updates;
+  const { firstname, lastname, title, country, image_link } = updates;
 
   // Prepare the update object dynamically
   const updateData = {};
@@ -25,6 +25,7 @@ export const updateUser = async (userId, updates) => {
   if (lastname) updateData["app_user.lastname"] = lastname;
   if (title) updateData["app_user.title"] = title;
   if (image_link) updateData["app_user.image_link"] = image_link;
+  if (country) updateData["app_user.country"] = country;
 
   const updatedUser = await User.findByIdAndUpdate(
     userId,
@@ -54,5 +55,37 @@ export const updateUserPassword = async (
     await user.save();
   } catch (error) {
     throw new Error(error.message || "Failed to update password.");
+  }
+};
+
+export const applySubscriptionPayment = async (
+  userId,
+  assistantID,
+  paidAmount
+) => {
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error(`User with ID ${userId} not found`);
+    }
+
+    // Locate the existing balance entry for the specified assistant
+    const balanceEntry = user.app_user.balances.find(
+      (balance) => balance.assistant_id === assistantID
+    );
+
+    if (balanceEntry) {
+      // Update the existing balance
+      balanceEntry.balance += paidAmount;
+    } else {
+      throw new Error(
+        `Balance entry for assistant ID ${assistantID} not found.`
+      );
+    }
+
+    await user.save();
+    return user;
+  } catch (error) {
+    throw new Error(error.message || "Failed to update subscription balance.");
   }
 };

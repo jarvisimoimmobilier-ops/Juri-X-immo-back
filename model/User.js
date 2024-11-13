@@ -71,11 +71,24 @@ const appUserSchema = new mongoose.Schema({
     },
     default: getDefaultImage(),
   },
-  balance: {
-    type: Number,
-    default: 0,
-    min: [0, "Balance cannot be negative"],
+  country: {
+    type: String,
+    maxlength: 100,
+    trim: true,
   },
+  balances: [
+    {
+      assistant_id: {
+        type: String, // Store the assistant ID as a string, e.g., "1" or "2"
+        required: true,
+      },
+      balance: {
+        type: Number,
+        default: 0,
+        min: [0, "Balance cannot be negative"],
+      },
+    },
+  ],
   threads: [{ type: mongoose.Schema.Types.ObjectId, ref: "Thread" }], // Reference to Thread model
 });
 
