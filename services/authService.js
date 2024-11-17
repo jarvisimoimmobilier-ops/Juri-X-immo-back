@@ -19,8 +19,8 @@ const registerUser = async (username, email, password) => {
   // Fetch assistant configuration to initialize balances
   const assistants = getAssistantConfig();
   const defaultBalances = Object.keys(assistants).map((assistantID) => ({
-    assistant_id: assistantID,
-    balance: 0,
+    avatar_id: assistantID,
+    balance: 1,
   }));
 
   // Create the new user with default balances

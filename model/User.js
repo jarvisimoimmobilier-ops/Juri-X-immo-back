@@ -78,15 +78,20 @@ const appUserSchema = new mongoose.Schema({
   },
   balances: [
     {
-      assistant_id: {
-        type: String, // Store the assistant ID as a string, e.g., "1" or "2"
+      avatar_id: {
+        type: String,
         required: true,
       },
       balance: {
         type: Number,
         default: 0,
-        min: [0, "Balance cannot be negative"],
       },
+      invoices: [
+        {
+          type: Object,
+          default: {}, // Default to an empty object, you can modify this to fit your invoice structure
+        },
+      ],
     },
   ],
   threads: [{ type: mongoose.Schema.Types.ObjectId, ref: "Thread" }], // Reference to Thread model

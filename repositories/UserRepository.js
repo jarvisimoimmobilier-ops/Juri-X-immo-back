@@ -1,5 +1,8 @@
 import User from "../model/User.js";
-import { UnAuthenticatedError } from "../errors/index.js";
+import { UnAuthenticatedError, payment_required } from "../errors/index.js";
+import { getAssistantConfig } from "../utils/functions.js";
+
+const assistants = getAssistantConfig();
 
 export const updateUserProfilePicture = async (userId, imageUrl) => {
   try {
@@ -59,33 +62,82 @@ export const updateUserPassword = async (
 };
 
 export const applySubscriptionPayment = async (
-  userId,
-  assistantID,
-  paidAmount
+  user,
+  amount_paid,
+  avatar_id,
+  invoice
 ) => {
   try {
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new Error(`User with ID ${userId} not found`);
-    }
-
-    // Locate the existing balance entry for the specified assistant
+    // Locate the balance entry for the specified assistant
     const balanceEntry = user.app_user.balances.find(
-      (balance) => balance.assistant_id === assistantID
+      (balance) => balance.avatar_id === avatar_id
     );
 
-    if (balanceEntry) {
-      // Update the existing balance
-      balanceEntry.balance += paidAmount;
-    } else {
-      throw new Error(
-        `Balance entry for assistant ID ${assistantID} not found.`
-      );
-    }
+    const usableAmount = amount_paid;
 
+    // Update the balance
+    balanceEntry.balance += usableAmount;
+
+    // Save the invoice details in the balance's invoices object
+    balanceEntry.invoices.push(invoice);
+
+    // Save the updated user document
     await user.save();
     return user;
   } catch (error) {
-    throw new Error(error.message || "Failed to update subscription balance.");
+    console.error("Error applying subscription payment:", error);
+    throw new Error(error.message || "Failed to apply subscription payment.");
   }
+};
+
+export const deductBalance = async (user, avatar_id, usage) => {
+  try {
+    // Locate the balance entry for the specified avatar (assistant)
+    const balanceEntry = user.app_user.balances.find(
+      (balance) => balance.avatar_id === avatar_id
+    );
+
+    const assistantConfig = assistants[avatar_id];
+    const inputTokenValue = assistantConfig.inputTokenValue;
+    const outputTokenValue = assistantConfig.outputTokenValue;
+
+    // Calculate the total amount to deduct (sum of prompt and completion tokens)
+    const totalInputTokensUsed = usage.prompt_tokens;
+    const totalOutputTokensUsed = usage.completion_tokens;
+
+    // Calculate the amount to deduct based on the total tokens used
+    const amountToDeduct =
+      totalInputTokensUsed * inputTokenValue +
+      totalOutputTokensUsed * outputTokenValue;
+
+    // Deduct the amount from the balance
+    balanceEntry.balance -= amountToDeduct;
+
+    // Save the updated user document
+    await user.save();
+    return user;
+  } catch (error) {
+    console.error("Error deducting balance:", error);
+    throw new Error(error.message || "Failed to deduct balance.");
+  }
+};
+
+export const hasSufficientBalance = (user, avatar_id) => {
+  const balanceEntry = user.app_user.balances.find(
+    (balance) => balance.avatar_id === avatar_id
+  );
+
+  if (balanceEntry.balance <= 0) {
+    throw new payment_required(
+      "Your balance on this avatar is : " +
+        (balanceEntry.balance * 2.5).toFixed(5) +
+        " $"
+    );
+  }
+
+  return true;
+};
+
+export const getMyBalences = (user) => {
+  return user.app_user.balances;
 };

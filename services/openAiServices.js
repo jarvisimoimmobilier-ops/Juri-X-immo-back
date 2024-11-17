@@ -11,24 +11,21 @@ const openai = new OpenAI({
   apiKey: process.env["OPENAI_API_KEY"],
 });
 
-async function createThread(assistant_app_id) {
-  if (!assistantsConfig || !assistantsConfig[assistant_app_id]) {
-    throw new notFoundError(
-      `No assistant found with appId: ${assistant_app_id}`
-    );
+async function createThread(avatar_id) {
+  if (!assistantsConfig || !assistantsConfig[avatar_id]) {
+    throw new notFoundError(`No assistant found with appId: ${avatar_id}`);
   }
   const thread = await openai.beta.threads.create();
   return thread.id;
 }
 
-async function sendMessageToOpenAI(message, assistant_app_id, thread_id) {
+async function sendMessageToOpenAI(message, avatar_id, thread_id) {
   const messageToSend = await openai.beta.threads.messages.create(thread_id, {
     role: "user",
     content: message,
   });
-  console.log(message);
   let run = await openai.beta.threads.runs.createAndPoll(thread_id, {
-    assistant_id: assistantsConfig[assistant_app_id].openAI_id,
+    assistant_id: assistantsConfig[avatar_id].openAI_id,
   });
   if (run.status === "completed") {
     const messages = await openai.beta.threads.messages.list(run.thread_id);
@@ -40,8 +37,7 @@ async function sendMessageToOpenAI(message, assistant_app_id, thread_id) {
     const formattedMessages = allMessages
       .map((message) => message.text.value)
       .join("\n");
-    console.log(formattedMessages);
-    return formattedMessages;
+    return { formattedMessages, usage: run.usage };
   } else {
     console.log(run.status);
   }

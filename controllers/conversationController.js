@@ -13,6 +13,10 @@ import {
   deleteThreadAndUserReference,
   updateThreadName,
 } from "../repositories/ThreadRepository.js";
+import {
+  deductBalance,
+  hasSufficientBalance,
+} from "../repositories/UserRepository.js";
 dotenv.config();
 
 // startConversation
@@ -66,20 +70,25 @@ const sendMessage = async (req, res) => {
   // Find the thread in the database
   const thread = await getThreadById(thread_id, user._id);
 
+  hasSufficientBalance(user, thread.assistant_id);
+
   const assistantResponse = await sendMessageToOpenAI(
     message,
     thread.assistant_id,
     thread.thread_id
   );
 
+  await deductBalance(user, thread.assistant_id, assistantResponse.usage);
   // Update the thread with the new message and assistant response
   updateThreadMessages(thread_id, {
     userMessage: message,
-    assistantMessage: assistantResponse,
+    assistantMessage: assistantResponse.formattedMessages,
   }).catch((error) => console.error("Failed to save messages:", error));
 
   // Respond with the assistant's message
-  res.status(StatusCodes.OK).json({ response: assistantResponse });
+  res
+    .status(StatusCodes.OK)
+    .json({ response: assistantResponse.formattedMessages });
 };
 
 // get messages
