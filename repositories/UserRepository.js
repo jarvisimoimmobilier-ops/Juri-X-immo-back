@@ -73,7 +73,7 @@ export const applySubscriptionPayment = async (
       (balance) => balance.avatar_id === avatar_id
     );
 
-    const usableAmount = amount_paid;
+    const usableAmount = amount_paid * 0.4;
 
     // Update the balance
     balanceEntry.balance += usableAmount;
