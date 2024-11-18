@@ -7,7 +7,7 @@
       "openAI_id": "asst_okttwqn7UPhUR6Ml2Ufxwgg8",
       "inputTokenValue": 0.000001,
       "outputTokenValue": 0.000002,
-      "min_subscription": 20,
+      "subscription": 20,
       "factor": 2.5
     },
     "2": {
@@ -16,7 +16,7 @@
       "openAI_id": "asst_okttwqn7UPhUR6Ml2Ufxwgg8",
       "inputTokenValue": 0.00000015,
       "outputTokenValue": 0.0000006,
-      "min_subscription": 100,
+      "subscription": 100,
       "factor": 2.5
     }
   }

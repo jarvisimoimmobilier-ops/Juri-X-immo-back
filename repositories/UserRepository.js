@@ -62,6 +62,7 @@ export const updateUserPassword = async (
 };
 
 export const applySubscriptionPayment = async (
+  // 20$ Avatar1 applySubscriptionPayment(req.user,20,1,invoice)
   user,
   amount_paid,
   avatar_id,
