@@ -40,6 +40,11 @@ const authUserSchema = new mongoose.Schema({
     required: [true, "Please provide password"],
     minlength: 6,
   },
+  customerId: {
+    type: String,
+    required: false,
+    default: null,
+  },
 });
 
 // App user sub-schema (to handle threads)
