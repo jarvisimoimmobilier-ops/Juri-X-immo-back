@@ -63,12 +63,19 @@ export const updateUserPassword = async (
 
 export const applySubscriptionPayment = async (
   // 20$ Avatar1 applySubscriptionPayment(req.user,20,1,invoice)
-  user,
+  customerId,
   amount_paid,
   avatar_id,
   invoice
 ) => {
   try {
+    const user = await User.findOne({ "app_user.customerId": customerId });
+    if (!user) {
+      throw new CustomAPIError(
+        `User with customerId ${customerId} not found.`,
+        StatusCodes.NOT_FOUND
+      );
+    }
     // Locate the balance entry for the specified assistant
     const balanceEntry = user.app_user.balances.find(
       (balance) => balance.avatar_id === avatar_id
