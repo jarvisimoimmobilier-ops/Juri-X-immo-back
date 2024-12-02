@@ -26,15 +26,13 @@ const register = async (req, res) => {
     // Respond with user details and token
     res.status(StatusCodes.CREATED).json({
       user: {
-        username: user.auth_user.username,
-        email: user.auth_user.email,
-        customerId: user.auth_user.customerId,
+        username: user.app_user.username,
+        email: user.app_user.email,
+        customerId: user.app_user.customerId,
       },
       token,
     });
-
   } catch (error) {
-
     console.error(error);
     res
       .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)

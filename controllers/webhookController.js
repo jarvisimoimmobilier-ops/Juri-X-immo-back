@@ -1,6 +1,5 @@
 import stripeInit from "stripe";
 import dotenv from "dotenv";
-import User from "../model/User.js";
 import { applySubscriptionPayment } from "../repositories/UserRepository.js";
 
 dotenv.config();
@@ -18,46 +17,60 @@ export async function handleWebhook(req, res) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
-    // console.log("req.body :" + req.body);
-
     // Extract event details
     const session = event.data.object;
 
-    //Step One
-    //#1- check plan name
-    //#2 get user by customer id
-    //#3 call call applySubscriptionPayment(user,price,avatar(based on price))
+    // Validate metadata
+    const plan = session.metadata?.plan;
+    if (!plan) {
+      console.error("Plan is missing from session metadata:", session.metadata);
+      return res.status(400).send("Plan is missing in metadata.");
+    }
 
-    //#user : get user by customerId
-    //amount: check session.metadata.plan name and get (price + avatar id)
-    //
-    const user = await User.findOne({
-      "auth_user.customerId": session.customer,
-    });
-
-    const amount_paid = session.metadata.plan === "ChatbotPro" ? 99.99 : 19.99;
-    const avatar_id = session.metadata.plan === "ChatbotPro" ? 2 : 1;
-
-    console.log(user);
+    // Determine amount and avatar ID based on plan
+    const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
+    const avatar_id = plan === "ChatbotPro" ? "2" : "1";
 
     // Handle event types
     switch (event.type) {
       case "checkout.session.completed":
-        console.log("Dataaaaaa:", session);
+        console.log("Checkout session completed:", session.id);
         break;
 
       case "payment_intent.succeeded":
-        console.log("Payment succeeded:", session);
-        await applySubscriptionPayment(user, 99.99, "2", null);
+        console.log("Payment succeeded for customer:", session.customer);
+        try {
+          const updatedUser = await applySubscriptionPayment(
+            session.customer,
+            amount_paid,
+            avatar_id,
+            null
+          );
 
+          // Find the updated balance for the avatar
+          const balanceEntry = updatedUser.app_user.balances.find(
+            (balance) => balance.avatar_id === avatar_id
+          );
+
+          const newBalance = balanceEntry ? balanceEntry.balance : "Unknown";
+          console.log(
+            `Subscription payment applied successfully for customer ${session.customer}. New balance is: ${newBalance}`
+          );
+        } catch (error) {
+          console.error(
+            `Error applying subscription payment for customer ${session.customer}:`,
+            error.message
+          );
+          return res.status(500).send("Failed to apply subscription payment.");
+        }
         break;
 
       case "payment_intent.payment_failed":
-        console.log("Payment failed:", session);
+        console.warn("Payment failed for customer:", session.customer);
         break;
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`Unhandled event type: ${event.type}`, session);
     }
 
     // Acknowledge receipt of the event
