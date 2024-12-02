@@ -1,18 +1,22 @@
 import * as paymentService from "../services/paymentService.js";
 import User from "../model/User.js";
+
 export async function checkoutController(req, res) {
   const user = req.user;
+  // User should send
+
   try {
-    const { name, email, userId, plan } = req.body;
+    const { name, email, plan } = req.body;
 
     // Logging input for debugging (ensure this does not log sensitive information in production)
-    console.log("Checkout request received:", { name, email, userId, plan });
+    console.log("Checkout request received:", { name, email, plan });
 
     // Create or retrieve customer
     let customer = await paymentService.createOrRetrieveStripeCustomer(
       name,
       email
     );
+
     console.log("Stripe customer:", customer.id);
 
     // Retrieve the appropriate price ID based on the plan
@@ -30,20 +34,21 @@ export async function checkoutController(req, res) {
       customer,
       req
     );
+
     console.log("Checkout session created:", checkoutSession.id);
 
     // Update user document with the customer ID
-    const userUpdateResult = await User.findOneAndUpdate(
-      { _id: userId },
-      { $set: { customerId: customer.id } },
-      { returnOriginal: false }
-    );
-    console.log("User updated with customer ID:", userUpdateResult);
+    // const userUpdateResult = await User.findOneAndUpdate(
+    //   { _id: userId },
+    //   { $set: { customerId: customer.id } },
+    //   { returnOriginal: false }
+    // );
+    // console.log("User updated with customer ID:", userUpdateResult);
 
     // Return the session and customer details
     res
       .status(200)
-      .json({ session: checkoutSession, customer: customer, plan });
+      .json({ session: checkoutSession, customer: customer, plan, email });
   } catch (error) {
     console.error("Error in checkoutController:", error);
     res.status(500).json({ error: "An error occurred" });

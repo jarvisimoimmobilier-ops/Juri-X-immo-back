@@ -2,6 +2,7 @@ import { UnAuthenticatedError, badRequestError } from "../errors/index.js";
 import User from "../model/User.js";
 import jwt from "jsonwebtoken";
 import { getAssistantConfig } from "../utils/functions.js";
+import { createOrRetrieveStripeCustomer } from "./paymentService.js";
 
 // Service function for registering a new user
 const registerUser = async (username, email, password) => {
@@ -16,6 +17,9 @@ const registerUser = async (username, email, password) => {
     throw new badRequestError("Email is already in use");
   }
 
+  // Create or retrieve a Stripe customer
+  const customerId = await createOrRetrieveStripeCustomer(username, email);
+  console.log(customerId);
   // Fetch assistant configuration to initialize balances
   const assistants = getAssistantConfig();
   const defaultBalances = Object.keys(assistants).map((assistantID) => ({
@@ -29,6 +33,7 @@ const registerUser = async (username, email, password) => {
       username,
       email,
       password,
+      customerId: customerId?.id,
     },
     app_user: {
       threads: [],

@@ -76,6 +76,11 @@ const appUserSchema = new mongoose.Schema({
     maxlength: 100,
     trim: true,
   },
+  customerId: {
+    type: String,
+    required: false,
+    default: null,
+  },
   balances: [
     {
       avatar_id: {

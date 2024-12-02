@@ -9,6 +9,7 @@ import {
 } from "../services/authService.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 // Register a new user
@@ -25,8 +26,9 @@ const register = async (req, res) => {
     // Respond with user details and token
     res.status(StatusCodes.CREATED).json({
       user: {
-        username: user.auth_user.username,
-        email: user.auth_user.email,
+        username: user.app_user.username,
+        email: user.app_user.email,
+        customerId: user.app_user.customerId,
       },
       token,
     });
@@ -107,4 +109,25 @@ const updateUserData = async (req, res) => {
   }
 };
 
-export { register, login, getUserById, updateUserData };
+// Get user data by customerId
+const getUserByCustomerId = async (req, res) => {
+  const { customerId } = req.params; // Assuming customerId is provided as a route parameter
+
+  try {
+    const user = await User.findOne({ customerId });
+    if (!user) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ message: "User not found" });
+    }
+
+    res.status(StatusCodes.OK).json({ user });
+  } catch (error) {
+    console.error(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ error: error.message });
+  }
+};
+
+export { register, login, getUserById, updateUserData, getUserByCustomerId };

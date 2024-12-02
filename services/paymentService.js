@@ -19,6 +19,7 @@ export async function createOrRetrieveStripeCustomer(name, email) {
 
   // No existing customer, create a new one
   console.log("Creating a new customer.");
+
   return await stripe.customers.create({
     name: name,
     email: email,
@@ -29,26 +30,31 @@ export async function createOrRetrieveStripeCustomer(name, email) {
 export async function createCheckoutSession(lineItems, customer, req) {
   const protocol = req.protocol + "://";
   const host = req.headers.host;
+
   return await stripe.checkout.sessions.create({
     line_items: lineItems,
     mode: "payment",
-    success_url: `${protocol}${host}/payment`,
-    cancel_url: `${protocol}${host}/payment`,
+    success_url: `${protocol}${host}`,
+    cancel_url: `${protocol}${host}`,
     payment_method_types: ["card"],
     customer: customer.id,
     metadata: {
-      plan: req.body.plan, // Include plan in metadata
+      plan: req.body.plan,
+      // Include plan in metadata
+    },
+    invoice_creation: {
+      enabled: true, // Enable invoice creation
     },
   });
 }
 
 export function getPriceId(plan) {
   switch (plan) {
-    case "Advanced":
-      return process.env.STRIPE_ADVANCED_PRODUCT_PRICE_ID;
-    case "Premium":
-      return process.env.STRIPE_PREMIUM_PRODUCT_PRICE_ID;
+    case "ChatbotIndividual":
+      return process.env.STRIPE_BASIC_PRODUCT_PRICE_ID;
+    case "ChatbotPro":
+      return process.env.STRIPE_PRO_PRODUCT_PRICE_ID;
     default:
-      return process.env.STRIPE_PREMIUM_PRODUCT_PRICE_ID;
+      return process.env.STRIPE_BASIC_PRODUCT_PRICE_ID;
   }
 }
