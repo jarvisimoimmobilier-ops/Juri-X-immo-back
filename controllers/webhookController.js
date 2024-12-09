@@ -8,8 +8,9 @@ const stripe = stripeInit(process.env.STRIPE_SECRET_KEY);
 
 export async function handleWebhook(req, res) {
   let event;
-  console.log(JSON.stringify(event));
-
+  console.log(event);
+  console.log(event.data);
+  console.log(event.data.object);
   try {
     // Construct the event from Stripe's signature
     event = stripe.webhooks.constructEvent(
