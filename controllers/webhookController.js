@@ -31,40 +31,44 @@ export async function handleWebhook(req, res) {
     const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
     const avatar_id = plan === "ChatbotPro" ? "2" : "1";
 
+    console.log("stripe events sent:" + event.type);
+
     // Handle event types
     switch (event.type) {
+      case "checkout.session.completed":
+        console.log("Checkout session completed:", session.id);
+        break;
+
       case "payment_intent.succeeded":
         console.log("Payment succeeded for customer:", session.customer);
-        try {
-          const updatedUser = await applySubscriptionPayment(
-            session.customer,
-            amount_paid,
-            avatar_id,
-            null
-          );
+        // try {
+        //   const updatedUser = await applySubscriptionPayment(
+        //     session.customer,
+        //     amount_paid,
+        //     avatar_id,
+        //     null
+        //   );
 
-          // Find the updated balance for the avatar
-          const balanceEntry = updatedUser.app_user.balances.find(
-            (balance) => balance.avatar_id === avatar_id
-          );
+        //   // Find the updated balance for the avatar
+        //   const balanceEntry = updatedUser.app_user.balances.find(
+        //     (balance) => balance.avatar_id === avatar_id
+        //   );
 
-          const newBalance = balanceEntry ? balanceEntry.balance : "Unknown";
-          console.log(
-            `Subscription payment applied successfully for customer ${session.customer}. New balance is: ${newBalance}`
-          );
-        } catch (error) {
-          console.error(
-            `Error applying subscription payment for customer ${session.customer}:`,
-            error.message
-          );
-          return res.status(500).send("Failed to apply subscription payment.");
-        }
-
+        //   const newBalance = balanceEntry ? balanceEntry.balance : "Unknown";
+        //   console.log(
+        //     `Subscription payment applied successfully for customer ${session.customer}. New balance is: ${newBalance}`
+        //   );
+        // } catch (error) {
+        //   console.error(
+        //     `Error applying subscription payment for customer ${session.customer}:`,
+        //     error.message
+        //   );
+        //   return res.status(500).send("Failed to apply subscription payment.");
+        // }
         break;
 
       case "payment_intent.payment_failed":
         console.warn("Payment failed for customer:", session.customer);
-
         break;
 
       default:
