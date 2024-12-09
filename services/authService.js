@@ -33,10 +33,10 @@ const registerUser = async (username, email, password) => {
       username,
       email,
       password,
-      customerId: customerId?.id,
     },
     app_user: {
       threads: [],
+      customerId: customerId?.id,
       balances: defaultBalances, // Set initial balances for each assistant
     },
   });
