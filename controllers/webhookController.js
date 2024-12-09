@@ -33,10 +33,6 @@ export async function handleWebhook(req, res) {
 
     // Handle event types
     switch (event.type) {
-      case "checkout.session.completed":
-        console.log("Checkout session completed:", session.id);
-        break;
-
       case "payment_intent.succeeded":
         console.log("Payment succeeded for customer:", session.customer);
         try {
@@ -63,10 +59,12 @@ export async function handleWebhook(req, res) {
           );
           return res.status(500).send("Failed to apply subscription payment.");
         }
+
         break;
 
       case "payment_intent.payment_failed":
         console.warn("Payment failed for customer:", session.customer);
+
         break;
 
       default:
