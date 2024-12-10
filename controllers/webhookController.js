@@ -23,7 +23,7 @@ export async function handleWebhook(req, res) {
     const session = event.data.object;
 
     // Access metadata from session
-    const plan = session.metadata?.plan; // Safely access plan from metadata
+    const plan = event.data.plan;
 
     if (!plan) {
       console.error("Plan is missing from session metadata:", session.metadata);
@@ -36,7 +36,7 @@ export async function handleWebhook(req, res) {
     switch (event.type) {
       case "checkout.session.completed":
         console.log("Checkout session completed:", session.id);
-        console.log("Plan from session metadata:", plan);
+        console.log("Plan from:", plan);
         break;
 
       case "payment_intent.succeeded":
