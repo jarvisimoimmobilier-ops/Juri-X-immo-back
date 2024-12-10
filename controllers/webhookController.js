@@ -44,7 +44,7 @@ export async function handleWebhook(req, res) {
         // Additional processing for session completion
         break;
 
-      case "payment_intent.succeeded": {
+      case "payment_intent.succeeded":
         console.log("Payment succeeded for payment intent:", session.id);
 
         // Retrieve the Checkout Session to access metadata if not present
@@ -89,7 +89,6 @@ export async function handleWebhook(req, res) {
         //   return res.status(500).send("Failed to apply subscription payment.");
         // }
         break;
-      }
 
       case "payment_intent.payment_failed":
         console.warn("Payment failed for payment intent:", session.id);
