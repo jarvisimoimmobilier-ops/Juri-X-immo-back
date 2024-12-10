@@ -8,9 +8,7 @@ const stripe = stripeInit(process.env.STRIPE_SECRET_KEY);
 
 export async function handleWebhook(req, res) {
   let event;
-  console.log(event);
-  console.log(event.data);
-  console.log(event.data.object);
+
   try {
     // Construct the event from Stripe's signature
     event = stripe.webhooks.constructEvent(
@@ -19,65 +17,77 @@ export async function handleWebhook(req, res) {
       process.env.STRIPE_WEBHOOK_SECRET
     );
 
+    console.log("Event received:", event.type);
+
     // Extract event details
     const session = event.data.object;
 
-    // Validate metadata
-    const plan = session.metadata?.plan;
-    if (!plan) {
-      console.error("Plan is missing from session metadata:", session.metadata);
-      return res.status(400).send("Plan is missing in metadata.");
-    }
-
-    // Determine amount and avatar ID based on plan
-    const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
-    const avatar_id = plan === "ChatbotPro" ? "2" : "1";
-
-    console.log("stripe events sent:" + event.type);
-
     // Handle event types
     switch (event.type) {
-      case "checkout.session.completed":
+      case "checkout.session.completed": {
         console.log("Checkout session completed:", session.id);
+
+        // Perform actions if necessary (e.g., log the event or prepare for payment success)
         break;
+      }
 
-      case "payment_intent.succeeded":
-        console.log("Payment succeeded for customer:", session.customer);
-        // try {
-        //   const updatedUser = await applySubscriptionPayment(
-        //     session.customer,
-        //     amount_paid,
-        //     avatar_id,
-        //     null
-        //   );
+      case "payment_intent.succeeded": {
+        const customerId = session.customer;
+        const plan = session.metadata?.plan;
 
-        //   // Find the updated balance for the avatar
-        //   const balanceEntry = updatedUser.app_user.balances.find(
-        //     (balance) => balance.avatar_id === avatar_id
-        //   );
+        if (!plan) {
+          console.error(
+            "Plan is missing from session metadata:",
+            session.metadata
+          );
+          return res.status(400).send("Plan is missing in metadata.");
+        }
 
-        //   const newBalance = balanceEntry ? balanceEntry.balance : "Unknown";
-        //   console.log(
-        //     `Subscription payment applied successfully for customer ${session.customer}. New balance is: ${newBalance}`
-        //   );
-        // } catch (error) {
-        //   console.error(
-        //     `Error applying subscription payment for customer ${session.customer}:`,
-        //     error.message
-        //   );
-        //   return res.status(500).send("Failed to apply subscription payment.");
-        // }
+        // Determine the amount and avatar ID based on the plan
+        const amountPaid = plan === "ChatbotPro" ? 99.99 : 19.99;
+        const avatarId = plan === "ChatbotPro" ? "2" : "1";
+
+        console.log("Payment succeeded for customer:", customerId);
+
+        try {
+          // Call function to apply payment
+          const updatedUser = await applySubscriptionPayment(
+            customerId,
+            amountPaid,
+            avatarId,
+            null
+          );
+
+          // Find the updated balance for the avatar
+          const balanceEntry = updatedUser.app_user.balances.find(
+            (balance) => balance.avatar_id === avatarId
+          );
+
+          const newBalance = balanceEntry ? balanceEntry.balance : "Unknown";
+          console.log(
+            `Subscription payment applied successfully for customer ${customerId}. New balance is: ${newBalance}`
+          );
+        } catch (error) {
+          console.error(
+            `Error applying subscription payment for customer ${customerId}:`,
+            error.message
+          );
+          return res.status(500).send("Failed to apply subscription payment.");
+        }
         break;
+      }
 
-      case "payment_intent.payment_failed":
-        console.warn("Payment failed for customer:", session.customer);
+      case "payment_intent.payment_failed": {
+        const customerId = session.customer;
+        console.warn("Payment failed for customer:", customerId);
         break;
+      }
 
       default:
         console.log(`Unhandled event type: ${event.type}`, session);
     }
 
-    // Acknowledge receipt of the event
+    // Respond with a 200 status to acknowledge receipt of the event
     res.sendStatus(200);
   } catch (err) {
     console.error(`Webhook Error: ${err.message}`);
