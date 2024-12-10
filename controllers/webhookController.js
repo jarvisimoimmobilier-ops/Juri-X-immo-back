@@ -21,6 +21,9 @@ export async function handleWebhook(req, res) {
 
     const session = event.data.object;
 
+    const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
+    const avatar_id = plan === "ChatbotPro" ? "2" : "1";
+
     switch (event.type) {
       case "checkout.session.completed":
         // Log metadata from session
@@ -52,6 +55,30 @@ export async function handleWebhook(req, res) {
 
         // Process the payment based on the plan
         // Add your logic here
+        try {
+          const updatedUser = await applySubscriptionPayment(
+            session.customer,
+            amount_paid,
+            avatar_id,
+            null
+          );
+
+          // Find the updated balance for the avatar
+          const balanceEntry = updatedUser.app_user.balances.find(
+            (balance) => balance.avatar_id === avatar_id
+          );
+
+          const newBalance = balanceEntry ? balanceEntry.balance : "Unknown";
+          console.log(
+            `Subscription payment applied successfully for customer ${session.customer}. New balance is: ${newBalance}`
+          );
+        } catch (error) {
+          console.error(
+            `Error applying subscription payment for customer ${session.customer}:`,
+            error.message
+          );
+          return res.status(500).send("Failed to apply subscription payment.");
+        }
         break;
       }
 
