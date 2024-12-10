@@ -19,31 +19,41 @@ export async function handleWebhook(req, res) {
 
     console.log("Event received:", event.type);
 
+    // Extract session object
     const session = event.data.object;
+    const plan = event.data.plan || session.metadata?.plan; // Safely get plan from event payload or metadata
 
+    // Define constants based on the plan
     const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
     const avatar_id = plan === "ChatbotPro" ? "2" : "1";
 
+    // Handle different event types
     switch (event.type) {
       case "checkout.session.completed":
-        // Log metadata from session
         console.log("Checkout session completed:", session.id);
-        console.log(
-          "Plan from session metadata:",
-          session.metadata?.plan || "No plan found"
-        );
+        console.log("Plan from session metadata:", plan || "No plan found");
+
+        if (!plan) {
+          console.error(
+            "Plan is missing in session metadata:",
+            session.metadata
+          );
+          return res.status(400).send("Plan is missing in metadata.");
+        }
+
+        // Additional processing for session completion
         break;
 
       case "payment_intent.succeeded": {
         console.log("Payment succeeded for payment intent:", session.id);
 
-        // Retrieve the Checkout Session to access metadata
+        // Retrieve the Checkout Session to access metadata if not present
         const checkoutSession = await stripe.checkout.sessions.retrieve(
-          session.id // Use the `id` of the payment intent or session
+          session.id // Use the `id` of the session
         );
 
-        const plan = checkoutSession.metadata?.plan;
-        if (!plan) {
+        const retrievedPlan = checkoutSession.metadata?.plan || plan;
+        if (!retrievedPlan) {
           console.error(
             "Plan is missing in metadata for payment intent:",
             checkoutSession.metadata
@@ -51,10 +61,9 @@ export async function handleWebhook(req, res) {
           return res.status(400).send("Plan is missing in metadata.");
         }
 
-        console.log("Plan from associated checkout session:", plan);
+        console.log("Plan from associated checkout session:", retrievedPlan);
 
-        // Process the payment based on the plan
-        // Add your logic here
+        // Process the payment based on the retrieved plan
         try {
           const updatedUser = await applySubscriptionPayment(
             session.customer,
