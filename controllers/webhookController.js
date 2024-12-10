@@ -47,22 +47,6 @@ export async function handleWebhook(req, res) {
       case "payment_intent.succeeded":
         console.log("Payment succeeded for payment intent:", session.id);
 
-        // Retrieve the Checkout Session to access metadata if not present
-        const checkoutSession = await stripe.checkout.sessions.retrieve(
-          session.id // Use the `id` of the session
-        );
-
-        const retrievedPlan = checkoutSession.metadata?.plan || plan;
-        if (!retrievedPlan) {
-          console.error(
-            "Plan is missing in metadata for payment intent:",
-            checkoutSession.metadata
-          );
-          return res.status(400).send("Plan is missing in metadata.");
-        }
-
-        console.log("Plan from associated checkout session:", retrievedPlan);
-
         // // Process the payment based on the retrieved plan
         // try {
         //   const updatedUser = await applySubscriptionPayment(
