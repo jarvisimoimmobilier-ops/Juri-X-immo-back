@@ -27,7 +27,8 @@ export async function handleWebhook(req, res) {
     console.log(plan);
     const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
     const avatar_id = plan === "ChatbotPro" ? "2" : "1";
-
+    console.log(amount_paid);
+    console.log(avatar_id);
     // Handle different event types
     switch (event.type) {
       case "checkout.session.completed":
