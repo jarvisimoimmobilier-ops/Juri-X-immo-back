@@ -108,8 +108,23 @@ const getConvHistory = async (req, res) => {
 // get conversations
 const getAllConversations = async (req, res) => {
   const userId = req.user._id; // Get the authenticated user's ID
-  const threads = await getAllThreadsByUserId(userId);
-  res.status(StatusCodes.OK).json(threads);
+  const { assistant_id } = req.body; // Get assistant_id from the request body (or req.query if using GET)
+
+  if (!assistant_id) {
+    return res
+      .status(StatusCodes.BAD_REQUEST)
+      .json({ message: "assistant_id is required" });
+  }
+
+  try {
+    const threads = await getAllThreadsByUserId(userId, assistant_id); // Pass both userId and assistantId
+    res.status(StatusCodes.OK).json(threads);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ message: "Something went wrong" });
+  }
 };
 
 // delete a conversation

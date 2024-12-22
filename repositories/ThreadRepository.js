@@ -56,9 +56,9 @@ export const getThreadById = async (_id, user_id) => {
   return thread;
 };
 
-export const getAllThreadsByUserId = async (user_id) => {
+export const getAllThreadsByUserId = async (user_id, assistant_id) => {
   return await Thread.aggregate([
-    { $match: { user_id } }, // Filter threads by user_id
+    { $match: { user_id, assistant_id } }, // Filter threads by user_id and assistant_id
     {
       $project: {
         _id: 1, // Include the MongoDB ID

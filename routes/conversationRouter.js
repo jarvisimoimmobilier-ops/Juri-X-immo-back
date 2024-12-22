@@ -14,7 +14,7 @@ const router = express.Router();
 router.route("/start").post(authenticateUser, startConversation);
 router.route("/send").post(authenticateUser, sendMessage);
 router.route("/:id").get(authenticateUser, getConvHistory);
-router.route("/").get(authenticateUser, getAllConversations);
+router.route("/").post(authenticateUser, getAllConversations);
 router.route("/:id").delete(authenticateUser, deleteConversation);
 router.route("/:id").patch(authenticateUser, updateConversationName);
 
