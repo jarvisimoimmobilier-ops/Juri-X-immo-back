@@ -46,8 +46,6 @@ export async function handleWebhook(req, res) {
 
       case "payment_intent.succeeded":
         console.log("Payment succeeded for payment intent:", session.id);
-        console.log(amount_paid);
-        console.log(avatar_id);
         const updatedUser = await applySubscriptionPayment(
           session.customer,
           amount_paid,

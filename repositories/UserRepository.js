@@ -72,21 +72,23 @@ export const applySubscriptionPayment = async (
   avatar_id,
   invoice
 ) => {
+  console.log(amount_paid);
+  console.log(avatar_id);
+  const assistantConfig = assistants[avatar_id];
   try {
     const user = await User.findOne({ "app_user.customerId": customerId });
     console.log(customerId);
     if (!user) {
-      throw new notFoundError(
-        `User with customerId ${customerId} not found.`,
-        StatusCodes.NOT_FOUND
-      );
+      throw new notFoundError(`User with customerId ${customerId} not found.`);
     }
     // Locate the balance entry for the specified assistant
     const balanceEntry = user.app_user.balances.find(
       (balance) => balance.avatar_id === avatar_id
     );
 
-    const usableAmount = amount_paid * 0.4;
+    const usableAmount = amount_paid / assistantConfig;
+    console.log("usable ammount to add is  :");
+    console.log(usableAmount);
 
     // Update the balance
     balanceEntry.balance += usableAmount;
