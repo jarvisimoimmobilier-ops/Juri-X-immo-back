@@ -1,5 +1,9 @@
 import User from "../model/User.js";
-import { UnAuthenticatedError, payment_required } from "../errors/index.js";
+import {
+  UnAuthenticatedError,
+  payment_required,
+  notFoundError,
+} from "../errors/index.js";
 import { getAssistantConfig } from "../utils/functions.js";
 
 const assistants = getAssistantConfig();
@@ -70,8 +74,9 @@ export const applySubscriptionPayment = async (
 ) => {
   try {
     const user = await User.findOne({ "app_user.customerId": customerId });
+    console.log(customerId);
     if (!user) {
-      throw new CustomAPIError(
+      throw new notFoundError(
         `User with customerId ${customerId} not found.`,
         StatusCodes.NOT_FOUND
       );
