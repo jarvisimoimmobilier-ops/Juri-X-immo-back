@@ -23,6 +23,12 @@ export async function handleWebhook(req, res) {
     const session = event.data.object;
     const plan = event.data.plan || session.metadata?.plan; // Safely get plan from event payload or metadata
 
+    // Define constants based on the plan
+    console.log(plan);
+    const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
+    const avatar_id = plan === "ChatbotPro" ? "2" : "1";
+    console.log(amount_paid);
+    console.log(avatar_id);
     // Handle different event types
     switch (event.type) {
       case "checkout.session.completed":
@@ -42,23 +48,6 @@ export async function handleWebhook(req, res) {
 
       case "payment_intent.succeeded":
         console.log("Payment succeeded for payment intent:", session.id);
-
-        // If this payment came from a checkout session, get the session ID
-        const sessionId = session.metadata?.checkout_session_id;
-
-        let paymentPlan;
-        if (sessionId) {
-          // Fetch the complete checkout session to get the metadata
-          const checkoutSession = await stripe.checkout.sessions.retrieve(
-            sessionId
-          );
-          paymentPlan = checkoutSession.metadata?.plan;
-        }
-        console.log(paymentPlan);
-
-        const amount_paid = paymentPlan === "ChatbotPro" ? 99.99 : 19.99;
-        const avatar_id = paymentPlan === "ChatbotPro" ? "2" : "1";
-
         const updatedUser = await applySubscriptionPayment(
           session.customer,
           amount_paid,
