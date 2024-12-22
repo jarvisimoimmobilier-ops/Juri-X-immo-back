@@ -24,6 +24,7 @@ export async function handleWebhook(req, res) {
     const plan = event.data.plan || session.metadata?.plan; // Safely get plan from event payload or metadata
 
     // Define constants based on the plan
+    console.log(plan);
     const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
     const avatar_id = plan === "ChatbotPro" ? "2" : "1";
 
