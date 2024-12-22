@@ -86,7 +86,7 @@ export const applySubscriptionPayment = async (
       (balance) => balance.avatar_id === avatar_id
     );
 
-    const usableAmount = amount_paid / assistantConfig;
+    const usableAmount = amount_paid / assistantConfig.factor;
     console.log("usable ammount to add is  :");
     console.log(usableAmount);
 
