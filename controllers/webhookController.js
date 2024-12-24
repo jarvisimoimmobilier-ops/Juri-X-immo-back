@@ -25,10 +25,7 @@ export async function handleWebhook(req, res) {
 
     // Define constants based on the plan
     console.log(plan);
-    const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
-    const avatar_id = plan === "ChatbotPro" ? "2" : "1";
-    console.log(amount_paid);
-    console.log(avatar_id);
+
     // Handle different event types
     switch (event.type) {
       case "checkout.session.completed":
@@ -48,37 +45,21 @@ export async function handleWebhook(req, res) {
 
       case "payment_intent.succeeded":
         console.log("Payment succeeded for payment intent:", session.id);
+
+        const paymentIntent = event.data.object;
+
+        const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
+        const avatar_id = plan === "ChatbotPro" ? "2" : "1";
+        console.log(amount_paid);
+        console.log(avatar_id);
+
         const updatedUser = await applySubscriptionPayment(
           session.customer,
           amount_paid,
           avatar_id,
           null
         );
-        // // Process the payment based on the retrieved plan
-        // try {
-        //   const updatedUser = await applySubscriptionPayment(
-        //     session.customer,
-        //     amount_paid,
-        //     avatar_id,
-        //     null
-        //   );
 
-        //   // Find the updated balance for the avatar
-        //   const balanceEntry = updatedUser.app_user.balances.find(
-        //     (balance) => balance.avatar_id === avatar_id
-        //   );
-
-        //   const newBalance = balanceEntry ? balanceEntry.balance : "Unknown";
-        //   console.log(
-        //     `Subscription payment applied successfully for customer ${session.customer}. New balance is: ${newBalance}`
-        //   );
-        // } catch (error) {
-        //   console.error(
-        //     `Error applying subscription payment for customer ${session.customer}:`,
-        //     error.message
-        //   );
-        //   return res.status(500).send("Failed to apply subscription payment.");
-        // }
         break;
 
       case "payment_intent.payment_failed":
