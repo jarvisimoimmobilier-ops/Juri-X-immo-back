@@ -30,44 +30,37 @@ export async function handleWebhook(req, res) {
     switch (event.type) {
       case "checkout.session.completed":
         console.log("Checkout session completed:", session.id);
-        console.log("Plan from session metadata:", plan || "No plan found");
 
+        const plan = session.metadata?.plan; // Get plan from metadata
         if (!plan) {
-          console.error(
-            "Plan is missing in session metadata:",
-            session.metadata
-          );
+          console.error("Plan missing in session metadata:", session.metadata);
           return res.status(400).send("Plan is missing in metadata.");
         }
-
-        // Additional processing for session completion
-        break;
-
-      case "payment_intent.succeeded":
-        console.log("Payment succeeded for payment intent:", session.id);
-
-        const paymentIntent = event.data.object;
-
-        console.log("Payment intent:", paymentIntent);
 
         const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
         const avatar_id = plan === "ChatbotPro" ? "2" : "1";
         console.log("amount_paid " + amount_paid);
         console.log("avatar_id " + avatar_id);
 
-        // const updatedUser = await applySubscriptionPayment(
-        //   session.customer,
-        //   amount_paid,
-        //   avatar_id,
-        //   null
-        // );
-
+        // Update the user in your database here
+        try {
+          const updatedUser = await applySubscriptionPayment(
+            session.customer,
+            amount_paid,
+            avatar_id,
+            null
+          );
+          console.log("User successfully updated with subscription plan.");
+        } catch (error) {
+          console.error("Failed to update user:", error);
+          return res.status(500).send("Database update failed.");
+        }
         break;
 
-      case "payment_intent.payment_failed":
-        console.warn("Payment failed for payment intent:", session.id);
+      case "payment_intent.succeeded":
+        console.log("Payment succeeded for payment intent:", session.id);
+        // Handle payment intent specifics if necessary
         break;
-
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
