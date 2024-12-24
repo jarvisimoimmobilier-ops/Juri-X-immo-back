@@ -48,17 +48,19 @@ export async function handleWebhook(req, res) {
 
         const paymentIntent = event.data.object;
 
+        console.log("Payment intent:", paymentIntent);
+
         const amount_paid = plan === "ChatbotPro" ? 99.99 : 19.99;
         const avatar_id = plan === "ChatbotPro" ? "2" : "1";
-        console.log(amount_paid);
-        console.log(avatar_id);
+        console.log("amount_paid " + amount_paid);
+        console.log("avatar_id " + avatar_id);
 
-        const updatedUser = await applySubscriptionPayment(
-          session.customer,
-          amount_paid,
-          avatar_id,
-          null
-        );
+        // const updatedUser = await applySubscriptionPayment(
+        //   session.customer,
+        //   amount_paid,
+        //   avatar_id,
+        //   null
+        // );
 
         break;
 
