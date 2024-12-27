@@ -34,8 +34,8 @@ export async function createCheckoutSession(lineItems, customer, req) {
   return await stripe.checkout.sessions.create({
     line_items: lineItems,
     mode: "payment",
-    success_url: `${protocol}${host}`,
-    cancel_url: `${protocol}${host}`,
+    success_url: `http://localhost:5173/avatars`,
+    cancel_url: `http://localhost:5173/payout`,
     payment_method_types: ["card"],
     customer: customer.id,
     metadata: {

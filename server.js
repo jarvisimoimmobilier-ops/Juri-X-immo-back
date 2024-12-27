@@ -25,7 +25,7 @@ app.use("/", webhookRoutes);
 app.use(cors());
 app.use(express.json());
 
-app.use("/api", paymentRoutes);
+app.use("/api/v1", paymentRoutes);
 
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/conversation", conversationRouter);
