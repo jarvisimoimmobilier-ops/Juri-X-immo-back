@@ -164,13 +164,12 @@ export const getMyBalences = (user) => {
 };
 
 export const getMyData = (user) => {
-  let appUser = user.app_user;
-  appUser.balances.forEach((balance) => {
+  user.app_user.balances.forEach((balance) => {
     const assistant = assistants[balance.avatar_id];
     if (assistant && assistant.factor) {
       balance.balance *= assistant.factor;
     }
   });
 
-  return appUser;
+  return user;
 };
