@@ -144,7 +144,7 @@ export const hasSufficientBalance = (user, avatar_id) => {
   if (balanceEntry.balance <= 0) {
     throw new payment_required(
       "Your balance on this avatar is : " +
-        (balanceEntry.balance * 2.5).toFixed(5) +
+        (balanceEntry.balance * assistants[avatar_id].factor).toFixed(5) +
         " $"
     );
   }
@@ -153,5 +153,24 @@ export const hasSufficientBalance = (user, avatar_id) => {
 };
 
 export const getMyBalences = (user) => {
-  return user.app_user.balances;
+  let appUser = user.app_user;
+  appUser.balances.forEach((balance) => {
+    const assistant = assistants[balance.avatar_id];
+    if (assistant && assistant.factor) {
+      balance.balance *= assistant.factor;
+    }
+  });
+  return appUser.balances;
+};
+
+export const getMyData = (user) => {
+  let appUser = user.app_user;
+  appUser.balances.forEach((balance) => {
+    const assistant = assistants[balance.avatar_id];
+    if (assistant && assistant.factor) {
+      balance.balance *= assistant.factor;
+    }
+  });
+
+  return appUser;
 };

@@ -3,6 +3,7 @@ import {
   updateUserProfilePicture,
   updateUser,
   updateUserPassword,
+  getMyData,
 } from "../repositories/UserRepository.js";
 import { StatusCodes } from "http-status-codes";
 import { uploadImageFile } from "../services/cloudinaryService.js";
@@ -50,7 +51,7 @@ const deleteProfilePicture = async (req, res) => {
 const getUser = async (req, res) => {
   const user = req.user;
   const response = {
-    user: user,
+    user: getMyData(user),
     message: "Thanks for calling this API",
   };
   res.status(StatusCodes.OK).json(response);
