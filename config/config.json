@@ -2,20 +2,20 @@
   "default_image": "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
   "assistants": {
     "1": {
-      "name": "Real Estate Assistant Fr ",
+      "name": "Individual - Albert",
       "avatar_name": "Avatar 1",
-      "openAI_id": "asst_okttwqn7UPhUR6Ml2Ufxwgg8",
-      "inputTokenValue": 0.000001,
-      "outputTokenValue": 0.000002,
+      "openAI_id": "asst_mkp5so0VxPARRELsMuAwbAsz",
+      "inputTokenValue": 0.0000001,
+      "outputTokenValue": 0.0000004,
       "subscription": 20,
       "factor": 3
     },
     "2": {
-      "name": "Advanced Real Estate Assistant Fr",
+      "name": "Pro - René",
       "avatar_name": "Avatar 2",
-      "openAI_id": "asst_okttwqn7UPhUR6Ml2Ufxwgg8",
-      "inputTokenValue": 0.00000015,
-      "outputTokenValue": 0.0000006,
+      "openAI_id": "asst_sJkMxtgFEc2wY7okrnrJNkCf",
+      "inputTokenValue": 0.0000004,
+      "outputTokenValue": 0.0000016,
       "subscription": 100,
       "factor": 3
     }
