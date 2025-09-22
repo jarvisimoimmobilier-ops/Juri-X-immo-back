@@ -19,10 +19,22 @@ const app = express();
 if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
+
 // Stripe requires the raw body for webhooks
 app.use("/", webhookRoutes);
 
-app.use(cors());
+// CORS configuration
+const corsOptions = {
+  origin: [
+    "http://localhost:3000", // for local development
+    "http://localhost:5173", // for Vite dev server
+    "https://joyful-genie-05b7dc.netlify.app"
+  ],
+  credentials: true, // if you need to send cookies or auth headers
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 
 app.use("/api/v1", paymentRoutes);
