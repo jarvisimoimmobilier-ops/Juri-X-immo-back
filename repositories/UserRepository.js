@@ -66,14 +66,13 @@ export const updateUserPassword = async (
 };
 
 export const applySubscriptionPayment = async (
-  // 20$ Avatar1 applySubscriptionPayment(req.user,20,1,invoice)
   customerId,
   amount_paid,
   avatar_id,
-  invoice
+  invoiceData
 ) => {
-  console.log("amount_paid from method :" + amount_paid);
-  console.log("avatar_id from method :" + avatar_id);
+  console.log("amount_paid from method:", amount_paid);
+  console.log("avatar_id from method:", avatar_id);
 
   const assistantConfig = assistants[avatar_id];
   try {
@@ -81,21 +80,38 @@ export const applySubscriptionPayment = async (
     if (!user) {
       throw new notFoundError(`User with customerId ${customerId} not found.`);
     }
-    // Locate the balance entry for the specified assistant
-    const balanceEntry = user.app_user.balances.find(
+
+    // Find or create balance entry for the specified assistant
+    let balanceEntry = user.app_user.balances.find(
       (balance) => balance.avatar_id === avatar_id
     );
 
+    if (!balanceEntry) {
+      // Create new balance entry if it doesn't exist
+      user.app_user.balances.push({
+        avatar_id: avatar_id,
+        balance: 0,
+        invoices: []
+      });
+      balanceEntry = user.app_user.balances.find(
+        (balance) => balance.avatar_id === avatar_id
+      );
+    }
+
     const usableAmount = amount_paid / assistantConfig.factor;
-    console.log("usable ammount to add is  : " + usableAmount);
+    console.log("usable amount to add is:", usableAmount);
 
     // Update the balance
     balanceEntry.balance += usableAmount;
 
-    // Save the invoice details in the balance's invoices object
-    balanceEntry.invoices.push(invoice);
+    // Save the invoice details if provided
+    if (invoiceData) {
+      balanceEntry.invoices.push({
+        ...invoiceData,
+        type: "initial_payment"
+      });
+    }
 
-    // Save the updated user document
     await user.save();
     return user;
   } catch (error) {
@@ -152,6 +168,8 @@ export const hasSufficientBalance = (user, avatar_id) => {
   return true;
 };
 
+
+
 export const getMyBalences = (user) => {
   let appUser = user.app_user;
   appUser.balances.forEach((balance) => {
@@ -173,3 +191,126 @@ export const getMyData = (user) => {
 
   return user;
 };
+
+
+// Add these functions to your UserRepository.js file
+
+// Reset user to default free tier balances when subscription is cancelled
+export const resetUserToDefaults = async (customerId) => {
+  try {
+    const user = await User.findOne({ "app_user.customerId": customerId });
+    if (!user) {
+      throw new notFoundError(`User with customerId ${customerId} not found.`);
+    }
+
+    // Reset all balances to default values (matching your existing defaults)
+    user.app_user.balances.forEach((balance) => {
+      if (balance.avatar_id === "1") {
+        // ChatbotBasic - reset to default ~1.0 balance
+        balance.balance = 0.9993036999999999;
+      } else if (balance.avatar_id === "2") {
+        // ChatbotPro - reset to default 1.0 balance  
+        balance.balance = 1;
+      }
+      
+      // Add cancellation record to invoices
+      balance.invoices.push({
+        type: "cancellation",
+        date: new Date(),
+        note: "Subscription cancelled - reset to default free tier"
+      });
+    });
+
+    await user.save();
+    console.log(`User ${customerId} reset to default balances.`);
+    return user;
+  } catch (error) {
+    console.error("Error resetting user to defaults:", error);
+    throw new Error(error.message || "Failed to reset user to defaults.");
+  }
+};
+
+// Extend subscription when recurring payment succeeds
+export const extendSubscription = async (customerId, amount_paid, avatar_id, invoiceData) => {
+  try {
+    const user = await User.findOne({ "app_user.customerId": customerId });
+    if (!user) {
+      throw new notFoundError(`User with customerId ${customerId} not found.`);
+    }
+
+    const assistantConfig = assistants[avatar_id];
+    const balanceEntry = user.app_user.balances.find(
+      (balance) => balance.avatar_id === avatar_id
+    );
+
+    if (!balanceEntry) {
+      // If balance entry doesn't exist, create it
+      user.app_user.balances.push({
+        avatar_id: avatar_id,
+        balance: 0,
+        invoices: []
+      });
+      balanceEntry = user.app_user.balances.find(
+        (balance) => balance.avatar_id === avatar_id
+      );
+    }
+
+    const usableAmount = amount_paid / assistantConfig.factor;
+    console.log("Extending subscription with usable amount:", usableAmount);
+
+    // Add the new balance
+    balanceEntry.balance += usableAmount;
+
+    // Save the invoice details
+    balanceEntry.invoices.push({
+      ...invoiceData,
+      type: "recurring_payment"
+    });
+
+    await user.save();
+    console.log(`Subscription extended for user ${customerId}`);
+    return user;
+  } catch (error) {
+    console.error("Error extending subscription:", error);
+    throw new Error(error.message || "Failed to extend subscription.");
+  }
+};
+
+// Handle failed payment - add grace period logic or notifications
+export const handleFailedPayment = async (customerId, failureData) => {
+  try {
+    const user = await User.findOne({ "app_user.customerId": customerId });
+    if (!user) {
+      throw new notFoundError(`User with customerId ${customerId} not found.`);
+    }
+
+    // Add failure record to all balance entries
+    user.app_user.balances.forEach((balance) => {
+      balance.invoices.push({
+        ...failureData,
+        type: "payment_failed",
+        note: "Payment attempt failed - account may be suspended if not resolved"
+      });
+    });
+
+    // Optional: Implement grace period logic here
+    // For example, don't immediately suspend if it's the first failure
+    if (failureData.attempt_count >= 3) {
+      // After 3 failed attempts, reduce balances significantly
+      user.app_user.balances.forEach((balance) => {
+        if (balance.balance > 1.0) {
+          balance.balance = Math.min(balance.balance, 1.0); // Limit to $1 worth
+        }
+      });
+      console.log(`Account limited due to multiple payment failures: ${customerId}`);
+    }
+
+    await user.save();
+    console.log(`Payment failure recorded for user ${customerId}`);
+    return user;
+  } catch (error) {
+    console.error("Error handling failed payment:", error);
+    throw new Error(error.message || "Failed to handle payment failure.");
+  }
+};
+

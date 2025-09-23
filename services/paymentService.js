@@ -34,7 +34,7 @@ export async function createCheckoutSession(lineItems, customer, req) {
   return await stripe.checkout.sessions.create({
     line_items: lineItems,
     mode: "payment",
-    success_url: `https://zippy-smakager-72ffd6.netlify.app/avatars`,
+    success_url: `https://zippy-smakager-72ffd6.netlify.app/converstations`,
     cancel_url: `https://zippy-smakager-72ffd6.netlify.app/payout`,
     payment_method_types: ["card"],
     customer: customer.id,
