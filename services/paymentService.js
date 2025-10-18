@@ -38,6 +38,7 @@ export async function createCheckoutSession(lineItems, customer, req) {
     cancel_url: `https://juriximmo.ai/payout`,
     payment_method_types: ["card"],
     customer: customer.id,
+    allow_promotion_codes: true,
     metadata: {
       plan: req.body.plan,
       // Include plan in metadata
