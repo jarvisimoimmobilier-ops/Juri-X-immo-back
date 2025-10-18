@@ -34,16 +34,13 @@ export async function createCheckoutSession(lineItems, customer, req) {
   return await stripe.checkout.sessions.create({
     line_items: lineItems,
     mode: "subscription",
-    success_url: `https://zippy-smakager-72ffd6.netlify.app/converstations`,
-    cancel_url: `https://zippy-smakager-72ffd6.netlify.app/payout`,
+    success_url: `https://juriximmo.ai/converstations`,
+    cancel_url: `https://juriximmo.ai/payout`,
     payment_method_types: ["card"],
     customer: customer.id,
     metadata: {
       plan: req.body.plan,
       // Include plan in metadata
-    },
-    invoice_creation: {
-      enabled: true, // Enable invoice creation
     },
   });
 }
