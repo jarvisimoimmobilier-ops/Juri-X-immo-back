@@ -35,7 +35,7 @@ export async function createCheckoutSession(lineItems, customer, req) {
     line_items: lineItems,
     mode: "subscription",
     success_url: `https://juriximmo.ai/converstations`,
-    cancel_url: `https://juriximmo.ai/payout`,
+    cancel_url: `https://juriximmo.ai/abonnements`,
     payment_method_types: ["card"],
     customer: customer.id,
     allow_promotion_codes: true,
