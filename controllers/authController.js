@@ -82,25 +82,22 @@ const getUserById = async (req, res) => {
 
 // Update user data
 const updateUserData = async (req, res) => {
-  const newUserData = req.body;
-
+  const { username, email, country } = req.body;
   try {
     // Extract user ID from the JWT token
     const user_id = await getUserIdFromToken(req.headers.authorization);
-
     const user = await User.findById(user_id);
     if (!user) {
       return res
         .status(StatusCodes.NOT_FOUND)
         .json({ message: "User not found or unauthorized to update" });
     }
-
-    // Update the user's data
-    const updatedUser = await User.findByIdAndUpdate(user_id, newUserData, {
-      new: true,
-    });
-
-    res.status(StatusCodes.OK).json({ updatedUser });
+    // Update nested fields if present
+    if (username) user.auth_user.username = username;
+    if (email) user.auth_user.email = email;
+    if (country) user.app_user.country = country;
+    await user.save();
+    res.status(StatusCodes.OK).json({ user });
   } catch (error) {
     console.error(error);
     res
